@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard, Package, FolderOpen, Image, Users, Mail,
-  Settings, LogOut, Menu, X
+  Settings, LogOut, Menu, X, Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -17,6 +17,7 @@ const navItems = [
   { label: 'Clients', icon: Users, path: '/admin/clients' },
   { label: 'Messages', icon: Mail, path: '/admin/messages' },
   { label: 'Site Settings', icon: Settings, path: '/admin/settings' },
+  { label: 'Import Data', icon: Upload, path: '/admin/import' },
 ];
 
 const AdminLayout = () => {
