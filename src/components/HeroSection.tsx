@@ -120,17 +120,24 @@ const HeroSection = () => {
             {subtitle}
           </p>
             <div
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center"
             style={{ animation: 'heroFadeUp 0.8s 0.45s ease-out both' }}
           >
-            <Button asChild size="lg" className="w-full sm:w-auto relative overflow-hidden bg-gradient-to-r from-[hsl(var(--sm-red))] to-[hsl(var(--sm-red-dark))] text-white text-lg sm:text-base px-10 py-7 sm:py-6 rounded-xl shadow-[0_8px_30px_hsl(0_72%_51%/0.4)] hover:shadow-[0_12px_40px_hsl(0_72%_51%/0.6)] hover:scale-[1.03] transition-all duration-300 border border-white/10 group">
+            <Button asChild size="lg" className="w-full sm:w-auto relative overflow-hidden bg-gradient-to-r from-[hsl(var(--sm-red))] via-[hsl(0,80%,55%)] to-[hsl(var(--sm-red-dark))] bg-[length:200%_100%] animate-[heroGradientShift_3s_ease-in-out_infinite] text-white text-lg sm:text-base px-12 py-7 sm:py-6 rounded-xl shadow-[0_8px_32px_hsl(0_72%_51%/0.45)] hover:shadow-[0_16px_48px_hsl(0_72%_51%/0.6)] hover:scale-[1.05] active:scale-[0.98] transition-all duration-300 border border-white/15 group">
               <a href="#contact">
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                {ctaPrimary}
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+                <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.3), inset 0 -1px 1px rgba(0,0,0,0.2)' }} />
+                <span className="relative flex items-center gap-2 font-semibold tracking-wide">
+                  {ctaPrimary}
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </span>
               </a>
             </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto border-white/20 text-white bg-white/5 backdrop-blur-md text-lg sm:text-base px-10 py-7 sm:py-6 rounded-xl hover:bg-white/15 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 shadow-[0_4px_20px_rgba(255,255,255,0.05)]">
-              <a href="#products">{ctaSecondary}</a>
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto relative overflow-hidden border-white/20 text-white bg-white/5 backdrop-blur-md text-lg sm:text-base px-12 py-7 sm:py-6 rounded-xl hover:bg-white/15 hover:border-white/40 hover:scale-[1.05] active:scale-[0.98] transition-all duration-300 shadow-[0_4px_24px_rgba(255,255,255,0.06)] group">
+              <a href="#products">
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+                <span className="relative font-semibold tracking-wide">{ctaSecondary}</span>
+              </a>
             </Button>
           </div>
         </div>
