@@ -30,7 +30,7 @@ const HeroSection = () => {
       {/* Background image with parallax */}
       <div
         ref={bgRef}
-        className="absolute inset-0 -top-20 -bottom-20 will-change-transform bg-cover bg-right-bottom md:bg-center"
+        className="absolute inset-0 -top-20 -bottom-20 will-change-transform bg-cover bg-center"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       {/* Dark overlay for text readability */}
