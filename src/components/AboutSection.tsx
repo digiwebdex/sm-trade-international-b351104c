@@ -21,7 +21,7 @@ const AboutSection = () => {
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((s, i) => (
-            <div key={i} className="bg-background rounded-xl p-6 text-center shadow-sm hover-lift">
+            <div key={i} className="bg-background rounded-xl p-6 text-center shadow-md hover:shadow-lg hover-lift transition-shadow duration-300">
               <s.icon className="h-8 w-8 mx-auto mb-3 text-sm-red" />
               <div className="text-3xl font-bold mb-1">{s.value}</div>
               <div className="text-muted-foreground text-sm">{t(s.key)}</div>

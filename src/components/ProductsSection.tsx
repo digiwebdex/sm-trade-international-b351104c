@@ -68,7 +68,7 @@ const ProductsSection = () => {
           {filtered.map((p, i) => (
             <div
               key={i}
-              className="group cursor-pointer overflow-hidden rounded-xl bg-background shadow-sm hover:shadow-lg transition-all"
+              className="group cursor-pointer overflow-hidden rounded-xl bg-background shadow-sm hover:shadow-xl transition-all duration-300"
               onClick={() => setLightbox(p.src)}
             >
               <div className="aspect-square overflow-hidden">

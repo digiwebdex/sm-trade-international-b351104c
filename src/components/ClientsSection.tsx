@@ -21,7 +21,7 @@ const ClientsSection = () => {
         <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">{t('clients.subtitle')}</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {clients.map((c, i) => (
-            <div key={i} className="flex items-center gap-3 bg-secondary rounded-lg p-4 hover-lift">
+            <div key={i} className="flex items-center gap-3 bg-secondary rounded-lg p-4 hover-lift shadow-sm hover:shadow-md transition-shadow duration-300">
               <Building2 className="h-5 w-5 text-sm-red shrink-0" />
               <span className="text-sm font-medium">{c}</span>
             </div>

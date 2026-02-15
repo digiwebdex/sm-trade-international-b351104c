@@ -16,10 +16,10 @@ const ContactSection = () => {
         <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
           <div>
             <form className="space-y-4" onSubmit={e => e.preventDefault()}>
-              <Input placeholder={t('contact.name')} className="bg-background" />
-              <Input type="email" placeholder={t('contact.email')} className="bg-background" />
-              <Input type="tel" placeholder={t('contact.phone')} className="bg-background" />
-              <Textarea placeholder={t('contact.message')} rows={5} className="bg-background" />
+              <Input placeholder={t('contact.name')} className="bg-background border-border/50 shadow-sm focus:shadow-md transition-shadow" />
+              <Input type="email" placeholder={t('contact.email')} className="bg-background border-border/50 shadow-sm focus:shadow-md transition-shadow" />
+              <Input type="tel" placeholder={t('contact.phone')} className="bg-background border-border/50 shadow-sm focus:shadow-md transition-shadow" />
+              <Textarea placeholder={t('contact.message')} rows={5} className="bg-background border-border/50 shadow-sm focus:shadow-md transition-shadow" />
               <Button type="submit" className="w-full bg-sm-red hover:bg-[hsl(var(--sm-red-dark))] text-white">
                 {t('contact.send')}
               </Button>
@@ -59,7 +59,7 @@ const ContactSection = () => {
               {t('contact.whatsapp')}
             </a>
 
-            <div className="bg-muted rounded-lg h-48 flex items-center justify-center text-muted-foreground text-sm mt-4">
+            <div className="bg-muted rounded-lg h-48 flex items-center justify-center text-muted-foreground text-sm mt-4 shadow-sm">
               Google Maps Placeholder
             </div>
           </div>
