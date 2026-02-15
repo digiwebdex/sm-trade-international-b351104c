@@ -1,9 +1,17 @@
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import logo from '@/assets/logo.jpeg';
 import { Phone, Mail, MapPin } from 'lucide-react';
 
 const Footer = () => {
   const { t } = useLanguage();
+  const { get } = useSiteSettings();
+
+  const desc = get('footer', 'description', t('footer.desc'));
+  const copyright = get('footer', 'copyright', t('footer.rights'));
+  const phone = get('contact', 'phone', '+88 01867666888');
+  const email = get('contact', 'email', 'smtrade.int94@gmail.com');
+  const address = get('contact', 'address', t('contact.addressValue'));
 
   return (
     <footer className="bg-sm-black text-white py-12">
@@ -14,7 +22,7 @@ const Footer = () => {
               <img src={logo} alt="Logo" className="h-10 rounded" />
               <span className="font-bold text-lg">S.M. Trade International</span>
             </div>
-            <p className="text-white/60 text-sm leading-relaxed">{t('footer.desc')}</p>
+            <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
           </div>
 
           <div>
@@ -31,15 +39,15 @@ const Footer = () => {
           <div>
             <h4 className="font-bold mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>{t('footer.contactinfo')}</h4>
             <div className="space-y-3 text-sm text-white/60">
-              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" />{t('contact.addressValue')}</div>
-              <div className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0" />+88 01867666888</div>
-              <div className="flex items-center gap-2"><Mail className="h-4 w-4 shrink-0" />smtrade.int94@gmail.com</div>
+              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" />{address}</div>
+              <div className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0" />{phone}</div>
+              <div className="flex items-center gap-2"><Mail className="h-4 w-4 shrink-0" />{email}</div>
             </div>
           </div>
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-8 text-center text-white/40 text-sm">
-          © {new Date().getFullYear()} S.M. Trade International. {t('footer.rights')}
+          © {new Date().getFullYear()} S.M. Trade International. {copyright}
         </div>
       </div>
     </footer>
