@@ -34,22 +34,40 @@ const ServicesSection = () => {
   };
 
   return (
-    <section id="services" className="py-20">
+    <section id="services" className="py-24">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('categories.title')}</h2>
-        <div className="w-16 h-1 bg-sm-gold mx-auto mb-8 rounded" />
+        {/* Header with gold accents */}
+        <div className="text-center mb-14">
+          <span
+            className="inline-block text-[hsl(var(--sm-gold))] text-sm font-semibold tracking-widest uppercase mb-3"
+            style={{ fontFamily: 'DM Sans, sans-serif' }}
+          >
+            What We Offer
+          </span>
+          <h2
+            className="text-3xl md:text-5xl font-bold mb-5"
+          >
+            {t('categories.title')}
+          </h2>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="h-px w-12 bg-[hsl(var(--sm-gold))]/40" />
+            <div className="w-2 h-2 rounded-full bg-[hsl(var(--sm-gold))]" />
+            <div className="h-px w-12 bg-[hsl(var(--sm-gold))]/40" />
+          </div>
+        </div>
 
         {/* Filter Chips */}
-        <div className="flex justify-center gap-2 mb-10 flex-wrap">
+        <div className="flex justify-center gap-2 mb-12 flex-wrap">
           {filterChips.map(chip => (
             <button
               key={chip.key}
               onClick={() => setActive(chip.key)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                 active === chip.key
-                  ? 'bg-sm-red text-white shadow-md'
-                  : 'bg-secondary text-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-secondary text-foreground hover:bg-primary/10 hover:text-primary'
               }`}
+              style={{ fontFamily: 'DM Sans, sans-serif' }}
             >
               {lang === 'en' ? chip.labelEn : chip.labelBn}
             </button>
@@ -83,15 +101,26 @@ const ServicesSection = () => {
             {filtered.map((s, i) => (
               <Card
                 key={`${s.filter}-${i}`}
-                className="group hover-lift border-0 shadow-md hover:shadow-xl transition-all duration-300 snap-center shrink-0 w-[280px] md:w-[calc(25%-18px)]"
+                className="group hover-lift border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 snap-center shrink-0 w-[280px] md:w-[calc(25%-18px)] overflow-hidden"
               >
-                <CardContent className="p-8 text-center">
-                  <div className="w-16 h-16 bg-sm-red/10 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-sm-red transition-colors duration-300">
-                    <s.icon className="h-8 w-8 text-sm-red group-hover:text-white transition-colors duration-300" />
+                <CardContent className="p-8 text-center relative">
+                  {/* Gold top accent line */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-[hsl(var(--sm-gold))] group-hover:w-full transition-all duration-500" />
+
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-primary transition-colors duration-300">
+                    <s.icon className="h-8 w-8 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
                   </div>
-                  <h3 className="font-bold text-lg mb-3" style={{ fontFamily: 'DM Sans, Noto Sans Bengali, sans-serif' }}>
+                  <h3
+                    className="font-bold text-lg mb-3"
+                    style={{ fontFamily: 'DM Sans, Noto Sans Bengali, sans-serif' }}
+                  >
                     {t(s.titleKey)}
                   </h3>
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <div className="h-px w-6 bg-[hsl(var(--sm-gold))]/50" />
+                    <div className="w-1 h-1 rounded-full bg-[hsl(var(--sm-gold))]" />
+                    <div className="h-px w-6 bg-[hsl(var(--sm-gold))]/50" />
+                  </div>
                   <p className="text-muted-foreground text-sm leading-relaxed">{t(s.descKey)}</p>
                 </CardContent>
               </Card>
