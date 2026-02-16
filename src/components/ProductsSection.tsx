@@ -239,7 +239,7 @@ const ProductsSection = () => {
             {filtered.map((p, i) => (
               <div
                 key={i}
-                className="group cursor-pointer overflow-hidden rounded-2xl bg-background shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative border border-border/30"
+                className="group cursor-pointer overflow-hidden rounded-2xl bg-background shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative border border-border/30 flex flex-col"
                 onClick={() => setLightbox(p)}
               >
                 {!p.isActive && (
@@ -268,10 +268,21 @@ const ProductsSection = () => {
                       {p.title}
                     </div>
                   )}
-                  {/* Frosted-glass title overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-10">
-                    <p className="font-semibold text-sm text-white line-clamp-1 drop-shadow-sm">{p.title}</p>
-                  </div>
+                </div>
+                {/* E-commerce details body */}
+                <div className="p-3 flex flex-col gap-1.5 flex-1">
+                  <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-tight">{p.title}</h3>
+                  {p.categoryLabel && (
+                    <span className="inline-block self-start bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full">
+                      {p.categoryLabel}
+                    </span>
+                  )}
+                  {p.desc && (
+                    <p className="text-muted-foreground text-xs line-clamp-2 leading-relaxed">{p.desc}</p>
+                  )}
+                  <span className="mt-auto pt-1.5 text-[11px] font-semibold text-[hsl(var(--sm-gold))] group-hover:underline">
+                    {lang === 'en' ? 'Request Quote →' : 'কোটেশন চান →'}
+                  </span>
                 </div>
               </div>
             ))}
@@ -292,24 +303,25 @@ const ProductsSection = () => {
             <div className="text-center space-y-3 max-w-xl">
               <h3 className="text-xl font-bold text-white">{lightbox.title}</h3>
               {lightbox.categoryLabel && (
-                <span className="inline-block bg-white/10 text-white/70 text-xs px-3 py-1 rounded-full">{lightbox.categoryLabel}</span>
+                <span className="inline-block bg-primary/20 text-primary-foreground text-xs px-3 py-1 rounded-full">{lightbox.categoryLabel}</span>
               )}
               {lightbox.desc && (
                 <p className="text-white/60 text-sm leading-relaxed">{lightbox.desc}</p>
               )}
-              {/* Show both languages in lightbox */}
+              {/* Bilingual alternate */}
               {lightbox.titleBn && lightbox.titleEn && (
-                <div className="pt-2 border-t border-white/10 space-y-1">
-                  <p className="text-white/40 text-xs">
-                    {lang === 'en' ? `বাংলা: ${lightbox.titleBn}` : `English: ${lightbox.titleEn}`}
-                  </p>
-                  {(lang === 'en' ? lightbox.descBn : lightbox.descEn) && (
-                    <p className="text-white/30 text-xs">
-                      {lang === 'en' ? lightbox.descBn : lightbox.descEn}
-                    </p>
-                  )}
-                </div>
+                <p className="text-white/30 text-xs pt-2 border-t border-white/10">
+                  {lang === 'en' ? `বাংলা: ${lightbox.titleBn}` : `English: ${lightbox.titleEn}`}
+                </p>
               )}
+              {/* Request Quote CTA */}
+              <a
+                href="#contact"
+                onClick={() => setLightbox(null)}
+                className="inline-block mt-3 px-6 py-2.5 rounded-full bg-[hsl(var(--sm-gold))] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                {lang === 'en' ? 'Request Quote' : 'কোটেশন অনুরোধ'}
+              </a>
             </div>
           </div>
         </div>
