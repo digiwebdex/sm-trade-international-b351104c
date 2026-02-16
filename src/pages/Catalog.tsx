@@ -2,12 +2,13 @@ import { useState, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, X } from 'lucide-react';
+import { Search, X, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import TopBar from '@/components/TopBar';
 import Navbar from '@/components/Navbar';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { lazy, Suspense } from 'react';
 
 const Footer = lazy(() => import('@/components/Footer'));
@@ -60,11 +61,21 @@ const categories = [
 
 const Catalog = () => {
   const { t, lang } = useLanguage();
+  const { get } = useSiteSettings();
+  const whatsappNumber = (get('contact', 'whatsapp_number', '8801867666888') as string).replace(/[^0-9]/g, '') || '8801867666888';
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Product | null>(null);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const getWhatsAppUrl = useCallback((p: Product) => {
+    const productName = lang === 'en' ? p.titleEn : p.titleBn;
+    const message = lang === 'en'
+      ? `Hi, I'm interested in "${productName}" from your catalog. Could you please share pricing and customization details?`
+      : `হ্যালো, আমি আপনার ক্যাটালগ থেকে "${productName}" পণ্যটিতে আগ্রহী। দয়া করে মূল্য ও কাস্টমাইজেশনের বিবরণ জানাবেন?`;
+    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  }, [lang, whatsappNumber]);
 
   // Try DB products first
   const { data: dbProducts = [] } = useQuery({
@@ -262,9 +273,21 @@ const Catalog = () => {
                             ))}
                           </div>
                         )}
-                        <span className="text-sm font-semibold text-accent group-hover:underline" style={{ fontFamily: 'DM Sans, sans-serif' }}>
-                          {lang === 'en' ? 'View Details →' : 'বিস্তারিত দেখুন →'}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-accent group-hover:underline" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                            {lang === 'en' ? 'View Details →' : 'বিস্তারিত দেখুন →'}
+                          </span>
+                          <a
+                            href={getWhatsAppUrl(p)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            className="flex items-center gap-1 text-[11px] font-medium text-[hsl(142,70%,40%)] hover:underline"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            WhatsApp
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -352,7 +375,15 @@ const Catalog = () => {
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
+                <Button asChild size="lg" className="bg-[hsl(142,70%,40%)] hover:bg-[hsl(142,70%,35%)] text-white px-8">
+                  <a href={getWhatsAppUrl(selected)} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    <span className="font-semibold" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                      {lang === 'en' ? 'Inquire on WhatsApp' : 'WhatsApp এ জিজ্ঞাসা করুন'}
+                    </span>
+                  </a>
+                </Button>
                 <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-white px-8">
                   <a href="/#contact" onClick={() => setSelected(null)}>
                     <span className="font-semibold" style={{ fontFamily: 'DM Sans, sans-serif' }}>
