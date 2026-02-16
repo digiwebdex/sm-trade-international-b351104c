@@ -4,11 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import MobileBottomBar from '@/components/MobileBottomBar';
-import WhatsAppFloat from '@/components/WhatsAppFloat';
+
 
 type GalleryItem = {
   id: string;
@@ -68,9 +64,7 @@ const Portfolio = () => {
   };
 
   return (
-    <div className="min-h-screen pb-14 md:pb-0">
-      <TopBar />
-      <Navbar />
+    <div>
 
       <main>
         {/* Hero banner */}
@@ -225,9 +219,6 @@ const Portfolio = () => {
         </div>
       )}
 
-      <Footer />
-      <WhatsAppFloat />
-      <MobileBottomBar />
     </div>
   );
 };

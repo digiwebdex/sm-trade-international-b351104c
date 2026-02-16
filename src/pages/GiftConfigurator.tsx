@@ -8,11 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
-import { lazy, Suspense } from 'react';
-
-const Footer = lazy(() => import('@/components/Footer'));
 
 // Product templates
 import img1 from '@/assets/products/ties-blue.png';
@@ -225,9 +220,7 @@ const GiftConfigurator = () => {
   }, [product, color, colorName, activeLogoPos, pkg, quantity, companyName, notes, lang]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar />
-      <Navbar />
+    <div className="bg-background">
 
       {/* Hero */}
       <section className="relative bg-primary text-primary-foreground py-16 overflow-hidden">
@@ -511,7 +504,7 @@ const GiftConfigurator = () => {
         </div>
       </section>
 
-      <Suspense fallback={null}><Footer /></Suspense>
+      
 
       {/* Quote Review Dialog */}
       <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>

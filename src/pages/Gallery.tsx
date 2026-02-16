@@ -3,12 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ZoomIn } from 'lucide-react';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
 import GalleryLightbox from '@/components/gallery/GalleryLightbox';
-import { lazy, Suspense } from 'react';
-
-const Footer = lazy(() => import('@/components/Footer'));
 
 // Static fallback images
 import img1 from '@/assets/products/ties-blue.png';
@@ -102,9 +97,7 @@ const Gallery = () => {
   const onNavigate = useCallback((idx: number) => setLightboxIdx(idx), []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar />
-      <Navbar />
+    <div className="bg-background">
 
       {/* Hero */}
       <section className="relative bg-primary text-primary-foreground py-20 overflow-hidden">
@@ -202,7 +195,7 @@ const Gallery = () => {
         </div>
       </section>
 
-      <Suspense fallback={null}><Footer /></Suspense>
+      
 
       {/* Lightbox */}
       {lightboxIdx !== null && (

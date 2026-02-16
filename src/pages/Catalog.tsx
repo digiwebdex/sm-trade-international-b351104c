@@ -6,13 +6,8 @@ import { Search, X, MessageCircle, ShoppingBag, Check } from 'lucide-react';
 import { useQuoteBasket } from '@/contexts/QuoteBasketContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { lazy, Suspense } from 'react';
-
-const Footer = lazy(() => import('@/components/Footer'));
 
 // Static fallback images
 import img1 from '@/assets/products/ties-blue.png';
@@ -167,9 +162,7 @@ const Catalog = () => {
   const desc = (p: Product) => lang === 'en' ? p.descEn : p.descBn;
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar />
-      <Navbar />
+    <div className="bg-background">
 
       {/* Hero banner */}
       <section className="relative bg-primary text-primary-foreground py-20 overflow-hidden">
@@ -349,7 +342,7 @@ const Catalog = () => {
         </div>
       </section>
 
-      <Suspense fallback={null}><Footer /></Suspense>
+      
 
       {/* Product Detail Modal */}
       {selected && (

@@ -4,12 +4,7 @@ import { OrbitControls, Environment, ContactShadows, Html } from '@react-three/d
 import * as THREE from 'three';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
 import { Upload, RotateCcw, Box, Cylinder, Circle, Hexagon, Smartphone, X } from 'lucide-react';
-import { lazy } from 'react';
-
-const Footer = lazy(() => import('@/components/Footer'));
 
 interface ProductShape {
   id: string;
@@ -219,9 +214,7 @@ const ARProductPreview = () => {
   const shape = productShapes.find(p => p.id === selectedShape)!;
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar />
-      <Navbar />
+    <div className="bg-background">
 
       {/* Hero */}
       <section className="relative bg-primary text-primary-foreground py-16 overflow-hidden">
@@ -395,7 +388,7 @@ const ARProductPreview = () => {
         </div>
       </section>
 
-      <Suspense fallback={null}><Footer /></Suspense>
+      
     </div>
   );
 };

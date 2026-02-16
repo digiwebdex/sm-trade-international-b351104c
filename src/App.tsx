@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { QuoteBasketProvider } from "@/contexts/QuoteBasketContext";
 import QuoteBasketDrawer from "@/components/QuoteBasketDrawer";
 import Index from "./pages/Index";
+import PublicLayout from "./components/PublicLayout";
 import NotFound from "./pages/NotFound";
 
 const Portfolio = lazy(() => import("./pages/Portfolio"));
@@ -50,22 +51,24 @@ const App = () => (
             <Sonner />
             <QuoteBasketDrawer />
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/catalog" element={
-                <Suspense fallback={<AdminFallback />}><Catalog /></Suspense>
-              } />
-              <Route path="/portfolio" element={
-                <Suspense fallback={<AdminFallback />}><Portfolio /></Suspense>
-              } />
-              <Route path="/gallery" element={
-                <Suspense fallback={<AdminFallback />}><GalleryPage /></Suspense>
-              } />
-              <Route path="/configurator" element={
-                <Suspense fallback={<AdminFallback />}><GiftConfigurator /></Suspense>
-              } />
-              <Route path="/3d-preview" element={
-                <Suspense fallback={<AdminFallback />}><ARProductPreview /></Suspense>
-              } />
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/catalog" element={
+                  <Suspense fallback={<AdminFallback />}><Catalog /></Suspense>
+                } />
+                <Route path="/portfolio" element={
+                  <Suspense fallback={<AdminFallback />}><Portfolio /></Suspense>
+                } />
+                <Route path="/gallery" element={
+                  <Suspense fallback={<AdminFallback />}><GalleryPage /></Suspense>
+                } />
+                <Route path="/configurator" element={
+                  <Suspense fallback={<AdminFallback />}><GiftConfigurator /></Suspense>
+                } />
+                <Route path="/3d-preview" element={
+                  <Suspense fallback={<AdminFallback />}><ARProductPreview /></Suspense>
+                } />
+              </Route>
               <Route path="/admin/login" element={
                 <Suspense fallback={<AdminFallback />}><AdminLogin /></Suspense>
               } />
