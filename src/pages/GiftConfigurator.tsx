@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { MessageCircle, Palette, Image, Package, Send, RotateCcw, Link2, Check } from 'lucide-react';
+import { MessageCircle, Palette, Image, Package, Send, RotateCcw, Link2, Check, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -168,6 +168,61 @@ const GiftConfigurator = () => {
     // Clear URL params
     window.history.replaceState({}, '', '/configurator');
   };
+
+  const exportQuotePdf = useCallback(() => {
+    const productName = lang === 'en' ? product.nameEn : product.nameBn;
+    const pkgName = lang === 'en' ? pkg.nameEn : pkg.nameBn;
+    const qtyLabel = quantityTiers.find(t => `${t.min}-${t.max}` === quantity)?.[lang === 'en' ? 'labelEn' : 'labelBn'] || quantity;
+    const dateStr = new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const rows = [
+      [lang === 'en' ? 'Product' : 'পণ্য', productName],
+      [lang === 'en' ? 'Color' : 'রঙ', `<div style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;border:1px solid #ddd;display:inline-block;background:${color.hex}"></span>${colorName}</div>`],
+      [lang === 'en' ? 'Logo Position' : 'লোগো অবস্থান', posLabel(activeLogoPos)],
+      [lang === 'en' ? 'Packaging' : 'প্যাকেজিং', pkgName],
+      [lang === 'en' ? 'Quantity' : 'পরিমাণ', qtyLabel],
+      [lang === 'en' ? 'Company' : 'কোম্পানি', companyName || '—'],
+      [lang === 'en' ? 'Special Notes' : 'বিশেষ নোট', notes || '—'],
+    ];
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>${lang === 'en' ? 'Quote Request' : 'কোটেশন অনুরোধ'} — S.M. Trade International</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;color:#1a1a2e;padding:48px;max-width:700px;margin:auto}
+  .header{text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:24px;margin-bottom:32px}
+  .header h1{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:4px}
+  .header p{font-size:12px;color:#666}
+  .date{text-align:right;font-size:12px;color:#888;margin-bottom:24px}
+  .section-title{font-family:'Cormorant Garamond',serif;font-size:18px;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;margin-bottom:32px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid #e5e5e5;font-size:13px}
+  th{background:#f8f8f6;font-weight:600;width:35%;color:#555}
+  td{font-weight:500}
+  .footer{margin-top:48px;padding-top:20px;border-top:1px solid #e5e5e5;text-align:center;font-size:11px;color:#999}
+  .footer strong{color:#1a1a2e}
+  .stamp{display:inline-block;border:2px solid #b8860b;color:#b8860b;padding:4px 16px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+  @media print{body{padding:24px}}
+</style></head><body>
+<div class="header">
+  <div class="stamp">${lang === 'en' ? 'Quote Request' : 'কোটেশন অনুরোধ'}</div>
+  <h1>S.M. Trade International</h1>
+  <p>${lang === 'en' ? 'Premium Customized Corporate Gifts & Promotional Products' : 'প্রিমিয়াম কাস্টমাইজড কর্পোরেট গিফট ও প্রমোশনাল পণ্য'}</p>
+</div>
+<div class="date">${dateStr}</div>
+<h3 class="section-title">${lang === 'en' ? 'Configuration Details' : 'কনফিগারেশনের বিবরণ'}</h3>
+<table>${rows.map(([l, v]) => `<tr><th>${l}</th><td>${v}</td></tr>`).join('')}</table>
+<div class="footer">
+  <p><strong>S.M. Trade International</strong></p>
+  <p>${lang === 'en' ? 'Dhaka, Bangladesh' : 'ঢাকা, বাংলাদেশ'} &bull; +880 1867-666888</p>
+  <p style="margin-top:8px">${lang === 'en' ? 'This is a quote request — not a confirmed order. Our team will contact you with pricing and delivery details.' : 'এটি একটি কোটেশন অনুরোধ — নিশ্চিত অর্ডার নয়। আমাদের টিম মূল্য ও ডেলিভারি বিবরণসহ যোগাযোগ করবে।'}</p>
+</div></body></html>`;
+
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); w.onload = () => w.print(); }
+  }, [product, color, colorName, activeLogoPos, pkg, quantity, companyName, notes, lang]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -533,12 +588,20 @@ const GiftConfigurator = () => {
                   </span>
                 </a>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setReviewOpen(false)} className="text-muted-foreground">
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                <span style={{ fontFamily: 'DM Sans, sans-serif' }}>
-                  {lang === 'en' ? 'Go Back & Edit' : 'ফিরে যান ও সম্পাদনা করুন'}
-                </span>
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 gap-2" onClick={exportQuotePdf}>
+                  <FileDown className="h-4 w-4" />
+                  <span style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                    {lang === 'en' ? 'Download PDF' : 'PDF ডাউনলোড'}
+                  </span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setReviewOpen(false)} className="text-muted-foreground flex-1">
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                  <span style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                    {lang === 'en' ? 'Go Back & Edit' : 'ফিরে যান ও সম্পাদনা করুন'}
+                  </span>
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
