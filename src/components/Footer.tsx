@@ -1,7 +1,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import logo from '@/assets/logo.jpeg';
-import { Phone, Mail, MapPin, Facebook, Linkedin, Instagram, ArrowUp } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Linkedin, Instagram } from 'lucide-react';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -114,13 +114,6 @@ const Footer = () => {
               Digiwebdex.com
             </a>
           </span>
-          <a
-            href="#home"
-            className="flex items-center gap-2 text-primary-foreground/40 hover:text-[hsl(var(--sm-gold))] text-sm transition-colors duration-300"
-          >
-            <ArrowUp className="h-4 w-4" />
-            Back to top
-          </a>
         </div>
       </div>
     </footer>
