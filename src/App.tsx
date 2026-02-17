@@ -33,7 +33,16 @@ const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminImport = lazy(() => import("./pages/admin/AdminImport"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,   // 5 min – avoid refetching on every mount
+      gcTime: 10 * 60 * 1000,     // 10 min garbage collection
+      refetchOnWindowFocus: false, // prevent refetch on tab switch
+      retry: 1,
+    },
+  },
+});
 
 const AdminFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">

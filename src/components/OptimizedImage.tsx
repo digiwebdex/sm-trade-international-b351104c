@@ -118,7 +118,7 @@ const OptimizedImage = ({
             fetchPriority={priority ? 'high' : undefined}
             onLoad={() => setLoaded(true)}
             className={cn(
-              'transition-all duration-500',
+              'transition-[transform,filter] duration-500 will-change-[transform,filter]',
               blurPlaceholder && !loaded && 'scale-105 blur-sm',
               blurPlaceholder && loaded && 'scale-100 blur-0',
               className
