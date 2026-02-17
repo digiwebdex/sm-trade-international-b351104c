@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import OptimizedImage from '@/components/OptimizedImage';
+import ProductImageGallery from '@/components/product/ProductImageGallery';
 import { toast } from 'sonner';
 
 const BULK_TIERS = [
@@ -56,6 +57,20 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
+  const { data: productImages = [] } = useQuery({
+    queryKey: ['product-images', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_images')
+        .select('*')
+        .eq('product_id', id!)
+        .order('sort_order');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
   const { data: relatedProducts = [] } = useQuery({
     queryKey: ['related-products', product?.category_id],
     queryFn: async () => {
@@ -76,6 +91,20 @@ const ProductDetail = () => {
     if (!selectedVariant) return variants[0] || null;
     return variants.find(v => v.id === selectedVariant) || variants[0] || null;
   }, [variants, selectedVariant]);
+
+  const { data: variantImages = [] } = useQuery({
+    queryKey: ['variant-images', activeVariant?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_variant_images')
+        .select('*')
+        .eq('variant_id', activeVariant!.id)
+        .order('sort_order');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!activeVariant?.id,
+  });
 
   const displayImage = activeVariant?.image_url || product?.image_url || '';
 
@@ -183,56 +212,18 @@ const ProductDetail = () => {
 
         {/* Main product section */}
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image + variant thumbnails */}
-          <div className="relative space-y-4">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-white border border-border/30 shadow-sm">
-              {displayImage ? (
-                <OptimizedImage
-                  src={displayImage}
-                  alt={title}
-                  className="w-full h-full object-contain p-4"
-                  wrapperClassName="w-full h-full"
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  {title}
-                </div>
-              )}
-            </div>
+          <div className="relative">
+            <ProductImageGallery
+              mainImage={product.image_url || ''}
+              productImages={productImages}
+              variantImages={variantImages}
+              activeVariantImage={activeVariant?.image_url}
+              title={title}
+            />
             {!product.is_active && (
-              <Badge variant="secondary" className="absolute top-4 left-4">
+              <Badge variant="secondary" className="absolute top-4 left-4 z-10">
                 {lang === 'en' ? 'Currently Unavailable' : 'বর্তমানে অনুপলব্ধ'}
               </Badge>
-            )}
-            {/* Variant image thumbnails */}
-            {hasVariants && variants.some(v => v.image_url) && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {/* Original product image */}
-                <button
-                  onClick={() => setSelectedVariant(null)}
-                  className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                    !selectedVariant ? 'border-[hsl(var(--sm-gold))] ring-1 ring-[hsl(var(--sm-gold))]/30' : 'border-border/30 hover:border-border'
-                  }`}
-                >
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-muted" />
-                  )}
-                </button>
-                {variants.filter(v => v.image_url).map(v => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVariant(v.id)}
-                    className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedVariant === v.id ? 'border-[hsl(var(--sm-gold))] ring-1 ring-[hsl(var(--sm-gold))]/30' : 'border-border/30 hover:border-border'
-                    }`}
-                  >
-                    <img src={v.image_url!} alt={v.variant_label_en} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
             )}
           </div>
 
