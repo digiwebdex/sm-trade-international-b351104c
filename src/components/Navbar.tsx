@@ -134,10 +134,10 @@ const Navbar = () => {
           </span>
         </a>
 
-        {/* Search bar — desktop (fixed width, not full flex-1) */}
+        {/* Search bar — desktop (fixed width, compact) */}
         <form
           onSubmit={handleSearch}
-          className="hidden md:flex w-80 lg:w-96 items-stretch h-10 rounded-md border-2 border-[hsl(var(--sm-gold))] shadow-sm overflow-visible"
+          className="hidden md:flex w-64 lg:w-80 items-stretch h-9 rounded-md border-2 border-[hsl(var(--sm-gold))] shadow-sm overflow-visible ml-4"
         >
           {/* Category selector */}
           <div className="relative flex-shrink-0" ref={searchCatRef}>
@@ -193,9 +193,9 @@ const Navbar = () => {
         {/* Admin sign-in (desktop) */}
         <Link
           to="/admin"
-          className="hidden md:flex items-center gap-1.5 ml-auto flex-shrink-0 text-xs font-medium text-foreground/60 hover:text-foreground border border-border/60 hover:border-[hsl(var(--sm-gold))]/60 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap"
+          className="hidden md:flex items-center gap-1.5 ml-auto flex-shrink-0 text-sm font-medium text-foreground/60 hover:text-foreground transition-all duration-200 whitespace-nowrap"
         >
-          <LogIn className="h-3.5 w-3.5" />
+          <LogIn className="h-4 w-4" />
           <span>Admin</span>
         </Link>
 
