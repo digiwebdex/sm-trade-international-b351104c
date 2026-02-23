@@ -1,24 +1,33 @@
 
-# Fix: Scroll to Top on Page Navigation
+# Fix: Slow Home Page Load on Navigation
 
 ## Problem
-When clicking a product (from the hero carousel or anywhere else), the browser navigates to the product detail page but keeps the previous scroll position. This causes the visitor to land at the bottom of the page (footer area) instead of the top where the product information is displayed.
+When switching from another page (like Gallery) back to the Home page, the hero section replays its fade-in animations (taking up to 1.2 seconds with staggered delays), and the product carousel appears empty or delayed because images need to reload. This makes the page feel sluggish.
 
-## Root Cause
-The app is missing a "scroll to top" handler on route changes. React Router does not automatically scroll to the top when navigating between pages.
+## Root Causes
+1. **Animations replay on every visit** -- The `heroFadeUp` animation has staggered delays (0s to 0.5s) using `animation-fill-mode: both`, so elements start invisible and fade in over ~1.2 seconds every time the component mounts.
+2. **Short cache time for hero products** -- The hero product query uses `staleTime: 60s` while the global default is 5 minutes. This causes unnecessary re-fetching.
+3. **Fallback images show briefly** -- While the DB query resolves, the carousel shows static fallback items, then switches to DB products causing a visual jump.
 
 ## Solution
-Create a small `ScrollToTop` component that listens for route changes and scrolls the window to the top. Then add it inside the `BrowserRouter` in `App.tsx`.
+
+### 1. Remove animation replay on return visits
+Only play the `heroFadeUp` animation on the very first page load. Use a module-level flag (`hasAnimated`) that starts `false` and flips to `true` after the first render. On subsequent visits, skip all animation delays so content appears instantly.
+
+### 2. Increase hero products cache time
+Change `staleTime` from `60 * 1000` (1 min) to `5 * 60 * 1000` (5 min) to match the global setting. This way, returning to the home page reuses cached product data instantly.
+
+### 3. Show fallback items without delay
+Keep the fallback carousel visible while products load so there's no empty state, and use `placeholderData` in the query so the carousel never flickers between fallback and real data.
+
+---
 
 ## Technical Details
 
-**New file: `src/components/ScrollToTop.tsx`**
-- Uses `useLocation()` from react-router-dom to detect route changes
-- Calls `window.scrollTo(0, 0)` in a `useEffect` whenever the pathname changes
-- Returns `null` (renders nothing)
+**File: `src/components/HeroSection.tsx`**
 
-**Edit: `src/App.tsx`**
-- Import `ScrollToTop`
-- Place `<ScrollToTop />` right inside `<BrowserRouter>` so it fires on every navigation
+- Add a module-level variable: `let hasAnimated = false;`
+- In the component, check `hasAnimated`. If `true`, set all `animation` style props to `'none'` so content renders instantly. If `false`, keep the current staggered animations and set `hasAnimated = true` in a `useEffect`.
+- Change `staleTime` on the `hero-products` query from `60 * 1000` to `5 * 60 * 1000`.
 
-This is a single, lightweight fix that solves the problem for all page navigations across the entire site.
+This is a single-file change that eliminates the perceived slowness without altering the visual design. First-time visitors still see the elegant fade-in; returning visitors get instant content.
