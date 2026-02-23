@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, ZoomIn, Monitor, Square } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, Monitor, Square, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ImageType = 'main' | 'front' | 'back' | 'left' | 'right' | 'gallery';
@@ -230,10 +230,16 @@ const ProductImageGallery = ({
             </>
           )}
 
-          {/* Zoom hint */}
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-50 transition-opacity">
-            <ZoomIn className="h-4 w-4" />
-          </div>
+          {/* Download button */}
+          <a
+            href={current.url}
+            download
+            onClick={e => e.stopPropagation()}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 backdrop-blur border border-border/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-background"
+            title="Download image"
+          >
+            <Download className="h-4 w-4" />
+          </a>
         </div>
 
         {/* Mobile horizontal thumbnails */}
