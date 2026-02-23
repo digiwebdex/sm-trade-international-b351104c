@@ -75,6 +75,32 @@ const ProductImageManager = ({ productId, variantId = null }: ProductImageManage
     onError: (err: Error) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
   });
 
+  const resizeImage = (file: File, maxSize = 1000): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          blob => (blob ? resolve(blob) : reject(new Error('Resize failed'))),
+          'image/webp',
+          0.85
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleUpload = async (file: File, imageType: ImageType) => {
     if (file.size > 5 * 1024 * 1024) {
       toast({ title: 'File too large', description: 'Max 5MB.', variant: 'destructive' });
@@ -86,11 +112,20 @@ const ProductImageManager = ({ productId, variantId = null }: ProductImageManage
     }
 
     setUploading(imageType);
-    const ext = file.name.split('.').pop();
-    const scope = variantId ? `variant-${variantId}` : `product-${productId}`;
-    const path = `product-views/${scope}/${imageType}-${Date.now()}.${ext}`;
 
-    const { error: uploadErr } = await supabase.storage.from('cms-images').upload(path, file);
+    let uploadBlob: Blob;
+    try {
+      uploadBlob = await resizeImage(file, 1000);
+    } catch {
+      toast({ title: 'Resize failed', variant: 'destructive' });
+      setUploading(null);
+      return;
+    }
+
+    const scope = variantId ? `variant-${variantId}` : `product-${productId}`;
+    const path = `product-views/${scope}/${imageType}-${Date.now()}.webp`;
+
+    const { error: uploadErr } = await supabase.storage.from('cms-images').upload(path, uploadBlob, { contentType: 'image/webp' });
     if (uploadErr) {
       toast({ title: 'Upload failed', description: uploadErr.message, variant: 'destructive' });
       setUploading(null);
