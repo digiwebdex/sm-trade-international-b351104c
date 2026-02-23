@@ -76,7 +76,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="home" className="relative overflow-hidden bg-foreground">
+    <section id="home" className="relative bg-foreground" style={{ overflow: 'clip' }}>
       {/* Background image with overlay */}
       <OptimizedImage src={heroBg} alt="" priority blurPlaceholder={false} className="absolute inset-0 w-full h-full object-cover opacity-20" wrapperClassName="absolute inset-0" />
       <div className="absolute inset-0 bg-gradient-to-br from-foreground/90 via-foreground/70 to-primary/30" />
@@ -162,48 +162,47 @@ const HeroSection = () => {
             {/* Glow behind carousel */}
             <div className="absolute inset-12 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
 
-            {/* 3D Carousel Stage */}
-            <div className="relative w-full py-8" style={{ perspective: '1200px' }}>
-              <div className="relative flex items-center justify-center" style={{ height: 260 }}>
+            {/* 3D Cube Carousel Stage */}
+            <div className="relative w-full py-8">
+              <div className="relative flex items-center justify-center" style={{ height: 280 }}>
                 {carouselItems.map((item, i) => {
                   const offset = getOffset(i);
                   const absOff = Math.abs(offset);
-                  const visible = absOff <= 2;
-                  if (!visible) return null;
+                  if (absOff > 2) return null;
 
-                  const rotateY = offset * 45;
-                  const tX = offset * 160;
-                  const tZ = absOff === 0 ? 80 : absOff === 1 ? 0 : -60;
-                  const scale = absOff === 0 ? 1.1 : absOff === 1 ? 0.85 : 0.65;
-                  const opacity = absOff === 0 ? 1 : absOff === 1 ? 0.6 : 0.25;
+                  // Coverflow-style 3D illusion
+                  const tX = offset * 155;
+                  const scale = absOff === 0 ? 1.08 : absOff === 1 ? 0.82 : 0.62;
+                  const opacity = absOff === 0 ? 1 : absOff === 1 ? 0.7 : 0.35;
                   const zIndex = 10 - absOff;
+                  const rotY = offset * 35; // subtle perspective tilt via CSS perspective()
 
                   return (
                     <div
                       key={i}
                       className="absolute flex flex-col items-center"
                       style={{
-                        transform: `translateX(${tX}px) translateZ(${tZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                        transform: `perspective(800px) translateX(${tX}px) rotateY(${rotY}deg) scale(${scale})`,
                         opacity,
                         zIndex,
                         transition: 'all 0.7s cubic-bezier(0.25,0.46,0.45,0.94)',
                         pointerEvents: absOff === 0 ? 'auto' : 'none',
-                        transformStyle: 'preserve-3d',
                       }}
                     >
                       <div
-                        className={`relative p-4 rounded-2xl border bg-white cursor-pointer transition-shadow duration-500 ${
+                        className={`relative p-4 rounded-2xl border bg-gradient-to-b from-gray-50 to-white cursor-pointer transition-shadow duration-500 ${
                           absOff === 0
                             ? 'border-accent/30 shadow-2xl shadow-accent/20'
-                            : 'border-border/20'
+                            : 'border-border/20 shadow-lg'
                         }`}
+                        style={{ width: 180 }}
                         onClick={() => setCurrent(i)}
                       >
                         <OptimizedImage
                           src={item.img}
                           alt={item.label}
-                          className="w-36 h-36 md:w-40 md:h-40 object-contain"
-                          sizes="160px"
+                          className="w-full h-40 object-contain"
+                          sizes="180px"
                           priority={absOff <= 1}
                           blurPlaceholder={false}
                         />
