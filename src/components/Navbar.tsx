@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X, Search, ChevronDown, Tag, LogIn } from 'lucide-react';
+import { Menu, X, Search, ChevronDown, Tag } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePrefetchHome } from '@/hooks/usePrefetchHome';
@@ -137,7 +137,7 @@ const Navbar = () => {
         {/* Search bar — desktop (flex-1 to fill available space) */}
         <form
           onSubmit={handleSearch}
-          className="hidden md:flex flex-1 items-stretch h-9 rounded-md border-2 border-[hsl(var(--sm-gold))] shadow-sm overflow-visible ml-6 mr-6"
+          className="hidden md:flex flex-1 max-w-md mx-auto items-stretch h-9 rounded-md border-2 border-[hsl(var(--sm-gold))] shadow-sm overflow-visible ml-6 mr-6"
         >
           {/* Category selector */}
           <div className="relative flex-shrink-0" ref={searchCatRef}>
@@ -190,14 +190,6 @@ const Navbar = () => {
           </button>
         </form>
 
-        {/* Admin sign-in (desktop) */}
-        <Link
-          to="/admin"
-          className="hidden md:flex items-center gap-1.5 ml-auto flex-shrink-0 text-sm font-medium text-foreground/60 hover:text-foreground transition-all duration-200 whitespace-nowrap"
-        >
-          <LogIn className="h-4 w-4" />
-          <span>Admin</span>
-        </Link>
 
         {/* Mobile menu toggle */}
         <button className="md:hidden ml-auto p-1" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -208,7 +200,7 @@ const Navbar = () => {
       {/* ── Row 2: Nav links (desktop only) ── */}
       <div className="hidden md:block border-t border-border/30 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-0 justify-end">
             {links.map(l =>
               (l as any).isRoute ? (
                 <Link
