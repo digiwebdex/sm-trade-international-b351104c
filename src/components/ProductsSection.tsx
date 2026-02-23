@@ -290,7 +290,7 @@ const ProductsSection = () => {
                     <OptimizedImage
                       src={p.src}
                       alt={p.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-500"
                       sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                       wrapperClassName="w-full h-full relative"
                     />
