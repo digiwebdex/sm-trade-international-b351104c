@@ -101,7 +101,7 @@ const InlineViewUploader = ({ staged, onStaged }: InlineViewUploaderProps) => {
                   </div>
                 ) : img?.url ? (
                   <>
-                    <img src={img.url} alt={label} className="w-full h-full object-cover" />
+                    <img src={img.url} alt={label} className="w-full h-full object-contain p-1" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                       <label className="cursor-pointer p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors" title="Replace">
                         <Upload className="h-3 w-3 text-foreground" />
@@ -283,7 +283,7 @@ const InlineVariantManager = ({ staged, onStaged, productCode, productId }: Inli
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Saved Variants</p>
           {liveVariants.map((lv: any) => (
             <div key={lv.id} className="flex items-center gap-2 p-2.5 rounded-lg border border-border/40 bg-muted/10 group">
-              {lv.image_url && <img src={lv.image_url} alt="" className="w-8 h-8 rounded object-cover border border-border/30 shrink-0" />}
+              {lv.image_url && <img src={lv.image_url} alt="" className="w-8 h-8 rounded object-contain border border-border/30 shrink-0" />}
               {!lv.image_url && (
                 <div className="w-8 h-8 rounded border border-dashed border-border/40 flex items-center justify-center shrink-0">
                   <ImageIcon className="h-3 w-3 text-muted-foreground/40" />
@@ -912,7 +912,7 @@ const AdminProducts = () => {
                     onChange={e => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
                   {form.image_url ? (
                     <div className="relative mt-2">
-                      <img src={form.image_url} alt="Preview" className="w-full h-40 object-cover rounded-lg border" />
+                      <img src={form.image_url} alt="Preview" className="w-full h-40 object-contain rounded-lg border bg-white p-2" />
                       <div className="absolute bottom-2 right-2 flex gap-1.5">
                         <Button type="button" size="sm" variant="secondary" onClick={() => fileRef.current?.click()}>Change</Button>
                         <Button type="button" size="sm" variant="secondary" onClick={() => setForm(f => ({ ...f, image_url: '' }))}>
