@@ -50,6 +50,7 @@ const HeroSection = () => {
   const [current, setCurrent] = useState(0);
   const [prevIdx, setPrevIdx] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchStartX = useRef(0);
@@ -95,16 +96,17 @@ const HeroSection = () => {
 
   const len = carouselItems.length;
 
-  const goTo = useCallback((idx: number) => {
+  const goTo = useCallback((idx: number, dir: 'next' | 'prev' = 'next') => {
     if (animating || idx === current) return;
     setPrevIdx(current);
+    setDirection(dir);
     setAnimating(true);
     setCurrent(idx);
-    setTimeout(() => setAnimating(false), 700);
+    setTimeout(() => setAnimating(false), 800);
   }, [current, animating]);
 
-  const next = useCallback(() => goTo((current + 1) % len), [goTo, current, len]);
-  const prev = useCallback(() => goTo((current - 1 + len) % len), [goTo, current, len]);
+  const next = useCallback(() => goTo((current + 1) % len, 'next'), [goTo, current, len]);
+  const prev = useCallback(() => goTo((current - 1 + len) % len, 'prev'), [goTo, current, len]);
 
   useEffect(() => {
     if (paused) return;
@@ -215,59 +217,100 @@ const HeroSection = () => {
             {/* Ambient glow behind active card */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-accent/10 blur-[80px] pointer-events-none" />
 
-            {/* 3D Box Cube */}
-            <div className="relative w-full flex justify-center mb-6" style={{ perspective: '1000px' }}>
+            {/* 3D Cube Box */}
+            <div className="relative w-full flex justify-center mb-6" style={{ perspective: '900px' }}>
+              {/* The cube container rotates as a whole */}
               <div
                 className="relative"
                 style={{
                   width: 300,
                   height: 280,
                   transformStyle: 'preserve-3d',
+                  transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
-                {/* Current face */}
+                {/* Front face — current product */}
                 <div
-                  className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-[0_20px_70px_-15px_hsl(var(--sm-gold)/0.4)] ring-2 ring-accent/20 cursor-pointer backface-hidden"
+                  className="absolute inset-0 rounded-2xl overflow-hidden bg-white cursor-pointer"
                   style={{
-                    transform: animating ? 'rotateY(0deg)' : 'rotateY(0deg)',
-                    animation: animating ? 'cubeRotateIn 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards' : undefined,
+                    backfaceVisibility: 'hidden',
+                    transform: 'translateZ(140px)',
+                    animation: animating
+                      ? direction === 'next'
+                        ? 'cubeFrontOut 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+                        : 'cubeFrontOutRev 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+                      : undefined,
+                    boxShadow: '0 20px 70px -15px hsl(var(--sm-gold) / 0.4)',
                   }}
                   onClick={() => {
-                    const item = carouselItems[current];
+                    const item = carouselItems[animating ? prevIdx : current];
                     if (item?.id) navigate(`/product/${item.id}`);
                     else navigate('/catalog');
                   }}
                 >
-                  <div className="p-4 flex items-center justify-center h-full">
+                  <div className="p-4 flex items-center justify-center h-full ring-2 ring-accent/20 rounded-2xl">
                     <OptimizedImage
-                      src={carouselItems[current]?.img || ''}
-                      alt={carouselItems[current]?.label || ''}
+                      src={carouselItems[animating ? prevIdx : current]?.img || ''}
+                      alt={carouselItems[animating ? prevIdx : current]?.label || ''}
                       className="w-full h-full object-contain"
                       sizes="300px"
                       priority
                       blurPlaceholder={false}
                     />
                   </div>
-                  <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-accent/10 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-accent/10 to-transparent pointer-events-none rounded-b-2xl" />
                 </div>
 
-                {/* Previous face (rotating out) */}
+                {/* Incoming face — next product rotating in */}
                 {animating && (
                   <div
-                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-xl ring-1 ring-white/10 backface-hidden"
+                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white"
                     style={{
-                      animation: 'cubeRotateOut 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                      backfaceVisibility: 'hidden',
+                      animation: direction === 'next'
+                        ? 'cubeRightIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+                        : 'cubeLeftIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                      boxShadow: '0 20px 70px -15px hsl(var(--sm-gold) / 0.4)',
                     }}
                   >
-                    <div className="p-4 flex items-center justify-center h-full">
+                    <div className="p-4 flex items-center justify-center h-full ring-2 ring-accent/20 rounded-2xl">
                       <OptimizedImage
-                        src={carouselItems[prevIdx]?.img || ''}
-                        alt={carouselItems[prevIdx]?.label || ''}
+                        src={carouselItems[current]?.img || ''}
+                        alt={carouselItems[current]?.label || ''}
                         className="w-full h-full object-contain"
                         sizes="300px"
                         blurPlaceholder={false}
                       />
                     </div>
+                    <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-accent/10 to-transparent pointer-events-none rounded-b-2xl" />
+                  </div>
+                )}
+
+                {/* Static current face when not animating */}
+                {!animating && (
+                  <div
+                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white cursor-pointer"
+                    style={{
+                      backfaceVisibility: 'hidden',
+                      boxShadow: '0 20px 70px -15px hsl(var(--sm-gold) / 0.4)',
+                    }}
+                    onClick={() => {
+                      const item = carouselItems[current];
+                      if (item?.id) navigate(`/product/${item.id}`);
+                      else navigate('/catalog');
+                    }}
+                  >
+                    <div className="p-4 flex items-center justify-center h-full ring-2 ring-accent/20 rounded-2xl">
+                      <OptimizedImage
+                        src={carouselItems[current]?.img || ''}
+                        alt={carouselItems[current]?.label || ''}
+                        className="w-full h-full object-contain"
+                        sizes="300px"
+                        priority
+                        blurPlaceholder={false}
+                      />
+                    </div>
+                    <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-accent/10 to-transparent pointer-events-none rounded-b-2xl" />
                   </div>
                 )}
               </div>
@@ -275,13 +318,13 @@ const HeroSection = () => {
               {/* Nav arrows */}
               <button
                 onClick={prev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/15 bg-white/5 backdrop-blur-md flex items-center justify-center text-white/60 hover:text-white hover:border-accent/40 hover:bg-accent/10 transition-all duration-300 z-20"
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full border border-white/15 bg-white/5 backdrop-blur-md flex items-center justify-center text-white/60 hover:text-white hover:border-accent/40 hover:bg-accent/10 transition-all duration-300 z-20"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={next}
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/15 bg-white/5 backdrop-blur-md flex items-center justify-center text-white/60 hover:text-white hover:border-accent/40 hover:bg-accent/10 transition-all duration-300 z-20"
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full border border-white/15 bg-white/5 backdrop-blur-md flex items-center justify-center text-white/60 hover:text-white hover:border-accent/40 hover:bg-accent/10 transition-all duration-300 z-20"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
