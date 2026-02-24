@@ -365,24 +365,24 @@ const ProductDetail = () => {
 
             {/* ─── Color Family (Daraz-style) ─── */}
             {uniqueColors.length > 0 && (
-              <div className="space-y-2.5">
-                <div className="text-sm">
-                  <span className="text-muted-foreground">{lang === 'en' ? 'Color Family' : 'রঙের ধরন'}</span>
-                  {' '}
+              <div className="space-y-3">
+                <div className="text-sm flex items-center gap-1.5">
+                  <span className="text-muted-foreground">{lang === 'en' ? 'Color Family' : 'রঙের ধরন'}:</span>
                   <span className="font-semibold text-foreground">{selectedColor || uniqueColors[0]?.color_name || ''}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {uniqueColors.map(v => {
                     const isActive = selectedColor === v.color_name || (!selectedColor && v === uniqueColors[0]);
                     return (
                       <button
                         key={v.color_name}
                         onClick={() => handleColorSelect(v.color_name!)}
+                        title={v.color_name ?? ''}
                         className={cn(
-                          'w-[42px] h-[42px] rounded border-2 overflow-hidden transition-all',
+                          'relative w-[52px] h-[52px] rounded-lg overflow-hidden transition-all duration-200',
                           isActive
-                            ? 'border-accent shadow-sm'
-                            : 'border-border/40 hover:border-accent/60',
+                            ? 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-md scale-105'
+                            : 'border-2 border-border/40 hover:border-accent/60 hover:shadow-sm',
                         )}
                       >
                         {v.image_url ? (
@@ -392,6 +392,11 @@ const ProductDetail = () => {
                             className="w-full h-full"
                             style={{ backgroundColor: v.color_hex ?? '#ccc' }}
                           />
+                        )}
+                        {isActive && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <CheckCircle2 className="h-5 w-5 text-white drop-shadow-md" />
+                          </div>
                         )}
                       </button>
                     );
