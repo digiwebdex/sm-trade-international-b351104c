@@ -237,7 +237,7 @@ const HeroSection = () => {
                       : undefined,
                   }}
                 >
-                  {/* Front face — current item */}
+                  {/* Front face — shows prevIdx during animation, current when idle */}
                   <div
                     className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-[0_20px_70px_-15px_hsl(var(--sm-gold)/0.4)] ring-2 ring-accent/20 cursor-pointer"
                     style={{
@@ -252,8 +252,8 @@ const HeroSection = () => {
                   >
                     <div className="p-4 flex items-center justify-center h-full">
                       <OptimizedImage
-                        src={carouselItems[current]?.img || ''}
-                        alt={carouselItems[current]?.label || ''}
+                        src={carouselItems[animating ? prevIdx : current]?.img || ''}
+                        alt={carouselItems[animating ? prevIdx : current]?.label || ''}
                         className="w-full h-full object-contain"
                         sizes="300px"
                         priority
@@ -263,9 +263,9 @@ const HeroSection = () => {
                     <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-accent/10 to-transparent pointer-events-none" />
                   </div>
 
-                  {/* Right face — next item (visible when rotating left/next) */}
+                  {/* Right face — incoming item when rotating next */}
                   <div
-                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-xl ring-1 ring-white/10"
+                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-xl ring-2 ring-accent/20"
                     style={{
                       backfaceVisibility: 'hidden',
                       transform: `rotateY(90deg) translateZ(${CUBE_SIZE / 2}px)`,
@@ -273,8 +273,8 @@ const HeroSection = () => {
                   >
                     <div className="p-4 flex items-center justify-center h-full">
                       <OptimizedImage
-                        src={carouselItems[direction === 'next' ? current : prevIdx]?.img || ''}
-                        alt={carouselItems[direction === 'next' ? current : prevIdx]?.label || ''}
+                        src={carouselItems[current]?.img || ''}
+                        alt={carouselItems[current]?.label || ''}
                         className="w-full h-full object-contain"
                         sizes="300px"
                         blurPlaceholder={false}
@@ -282,9 +282,9 @@ const HeroSection = () => {
                     </div>
                   </div>
 
-                  {/* Left face — prev item (visible when rotating right/prev) */}
+                  {/* Left face — incoming item when rotating prev */}
                   <div
-                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-xl ring-1 ring-white/10"
+                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-xl ring-2 ring-accent/20"
                     style={{
                       backfaceVisibility: 'hidden',
                       transform: `rotateY(-90deg) translateZ(${CUBE_SIZE / 2}px)`,
@@ -292,22 +292,14 @@ const HeroSection = () => {
                   >
                     <div className="p-4 flex items-center justify-center h-full">
                       <OptimizedImage
-                        src={carouselItems[direction === 'prev' ? current : prevIdx]?.img || ''}
-                        alt={carouselItems[direction === 'prev' ? current : prevIdx]?.label || ''}
+                        src={carouselItems[current]?.img || ''}
+                        alt={carouselItems[current]?.label || ''}
                         className="w-full h-full object-contain"
                         sizes="300px"
                         blurPlaceholder={false}
                       />
                     </div>
                   </div>
-
-                  {/* Back face */}
-                  <div
-                    className="absolute inset-0 rounded-2xl overflow-hidden bg-white/50"
-                    style={{
-                      backfaceVisibility: 'hidden',
-                      transform: `rotateY(180deg) translateZ(${CUBE_SIZE / 2}px)`,
-                    }}
                   />
                 </div>
               </div>
