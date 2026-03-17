@@ -76,8 +76,7 @@ const HeroSection = () => {
         .from('products')
         .select('id, name_en, name_bn, image_url, product_code')
         .eq('is_active', true)
-        .order('sort_order')
-        .limit(8);
+        .order('sort_order');
       if (error) throw error;
       return data;
     },
