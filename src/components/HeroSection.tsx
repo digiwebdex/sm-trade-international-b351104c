@@ -222,19 +222,19 @@ const HeroSection = () => {
                   transformStyle: 'preserve-3d',
                 }}
               >
-                {/* The rotating cube container */}
+                {/* The rotating cube container — key forces remount to reset rotation */}
                 <div
+                  key={`${current}-${prevIdx}`}
                   style={{
                     width: 300,
                     height: CUBE_SIZE,
                     position: 'relative',
                     transformStyle: 'preserve-3d',
-                    transition: animating ? 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
-                    transform: animating
+                    animation: animating
                       ? direction === 'next'
-                        ? 'rotateY(-90deg)'
-                        : 'rotateY(90deg)'
-                      : 'rotateY(0deg)',
+                        ? 'cubeRotateNext 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+                        : 'cubeRotatePrev 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+                      : undefined,
                   }}
                 >
                   {/* Front face — current item */}
