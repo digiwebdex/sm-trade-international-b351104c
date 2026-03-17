@@ -28,6 +28,7 @@ const BULK_TIERS = [
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { lang } = useLanguage();
   const { addItem } = useQuoteBasket();
