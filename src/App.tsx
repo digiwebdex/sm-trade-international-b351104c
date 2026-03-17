@@ -22,6 +22,11 @@ const ARProductPreview = lazy(() => import("./pages/ARProductPreview"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ProductGallery = lazy(() => import("./pages/ProductGallery"));
 
+// Minimal fallback – prevents the jarring full-screen spinner flash
+const PageFallback = () => (
+  <div className="min-h-[60vh]" />
+);
+
 // Lazy-load admin routes – they're never needed on the public site
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
