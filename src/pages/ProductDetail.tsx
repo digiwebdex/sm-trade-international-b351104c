@@ -34,6 +34,7 @@ const ProductDetail = () => {
 
   const [selectedDesign, setSelectedDesign] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [hoveredColor, setHoveredColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   // ─── Data Fetching ───────────────────────────────────────────────────
@@ -130,16 +131,18 @@ const ProductDetail = () => {
     return variants.filter(v => v.color_name && !seen.has(v.color_name) && seen.add(v.color_name));
   }, [variants]);
 
+  const effectiveColor = hoveredColor ?? selectedColor;
+
   const activeVariant = useMemo(() => {
     if (!variants.length) return null;
-    if (selectedDesign && selectedColor) {
-      const match = variants.find(v => v.design_type === selectedDesign && v.color_name === selectedColor);
+    if (selectedDesign && effectiveColor) {
+      const match = variants.find(v => v.design_type === selectedDesign && v.color_name === effectiveColor);
       if (match) return match;
     }
     if (selectedDesign) return variants.find(v => v.design_type === selectedDesign) ?? variants[0];
-    if (selectedColor) return variants.find(v => v.color_name === selectedColor) ?? variants[0];
+    if (effectiveColor) return variants.find(v => v.color_name === effectiveColor) ?? variants[0];
     return variants[0];
-  }, [variants, selectedDesign, selectedColor]);
+  }, [variants, selectedDesign, effectiveColor]);
 
   const { data: variantImages = [] } = useQuery({
     queryKey: ['product-view-images', id, activeVariant?.id ?? null],
@@ -368,7 +371,7 @@ const ProductDetail = () => {
               <div className="space-y-3">
                 <div className="text-sm flex items-center gap-1.5">
                   <span className="text-muted-foreground">{lang === 'en' ? 'Color Family' : 'রঙের ধরন'}:</span>
-                  <span className="font-semibold text-foreground">{selectedColor || uniqueColors[0]?.color_name || ''}</span>
+                  <span className="font-semibold text-foreground">{effectiveColor || uniqueColors[0]?.color_name || ''}</span>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   {uniqueColors.map(v => {
@@ -377,6 +380,8 @@ const ProductDetail = () => {
                       <button
                         key={v.color_name}
                         onClick={() => handleColorSelect(v.color_name!)}
+                        onMouseEnter={() => setHoveredColor(v.color_name)}
+                        onMouseLeave={() => setHoveredColor(null)}
                         title={v.color_name ?? ''}
                         className={cn(
                           'relative w-[52px] h-[52px] rounded-lg overflow-hidden transition-all duration-200',
