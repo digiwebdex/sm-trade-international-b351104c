@@ -297,13 +297,24 @@ const AdminSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Hero Section</CardTitle>
-              <CardDescription>Main banner text and call-to-action buttons</CardDescription>
+              <CardDescription>Main banner text, call-to-action buttons, and statistics counters</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <BilingualField section="hero" field="title" label="Hero Title" />
               <BilingualField section="hero" field="subtitle" label="Subtitle" multiline />
               <BilingualField section="hero" field="cta_primary" label="Primary Button Text" />
               <BilingualField section="hero" field="cta_secondary" label="Secondary Button Text" />
+              <div className="border-t pt-4 mt-4">
+                <Label className="font-semibold text-sm mb-3 block">Hero Statistics Bar</Label>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="grid md:grid-cols-2 gap-3">
+                      <BilingualField section="hero" field={`stat${n}_value`} label={`Stat ${n} Value`} />
+                      <BilingualField section="hero" field={`stat${n}_label`} label={`Stat ${n} Label`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
               <SaveButton section="hero" />
             </CardContent>
           </Card>
