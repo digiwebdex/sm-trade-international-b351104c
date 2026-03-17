@@ -1,17 +1,13 @@
-import { lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import HeroSection from '@/components/HeroSection';
-
-// Lazy-load below-fold sections for faster initial paint
-const AboutSection = lazy(() => import('@/components/AboutSection'));
-const ServicesSection = lazy(() => import('@/components/ServicesSection'));
-const ProcessSection = lazy(() => import('@/components/ProcessSection'));
-const ProductsSection = lazy(() => import('@/components/ProductsSection'));
-const ClientsSection = lazy(() => import('@/components/ClientsSection'));
-
-const QuoteRequestForm = lazy(() => import('@/components/QuoteRequestForm'));
-const ContactSection = lazy(() => import('@/components/ContactSection'));
+import AboutSection from '@/components/AboutSection';
+import ServicesSection from '@/components/ServicesSection';
+import ProcessSection from '@/components/ProcessSection';
+import ProductsSection from '@/components/ProductsSection';
+import ClientsSection from '@/components/ClientsSection';
+import QuoteRequestForm from '@/components/QuoteRequestForm';
+import ContactSection from '@/components/ContactSection';
 
 const sectionComponents: Record<string, React.ComponentType> = {
   hero: HeroSection,
@@ -20,7 +16,6 @@ const sectionComponents: Record<string, React.ComponentType> = {
   process: ProcessSection,
   products: ProductsSection,
   clients: ClientsSection,
-  
   quote: QuoteRequestForm,
   contact: ContactSection,
 };
@@ -51,10 +46,7 @@ const Index = () => {
         if (hidden.has(id)) return null;
         const Component = sectionComponents[id];
         if (!Component) return null;
-        // Hero loads eagerly; everything else is lazy
-        return id === 'hero'
-          ? <Component key={id} />
-          : <Suspense key={id} fallback={<div className="min-h-[200px]" />}><Component /></Suspense>;
+        return <Component key={id} />;
       })}
     </main>
   );
