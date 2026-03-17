@@ -131,16 +131,18 @@ const ProductDetail = () => {
     return variants.filter(v => v.color_name && !seen.has(v.color_name) && seen.add(v.color_name));
   }, [variants]);
 
+  const effectiveColor = hoveredColor ?? selectedColor;
+
   const activeVariant = useMemo(() => {
     if (!variants.length) return null;
-    if (selectedDesign && selectedColor) {
-      const match = variants.find(v => v.design_type === selectedDesign && v.color_name === selectedColor);
+    if (selectedDesign && effectiveColor) {
+      const match = variants.find(v => v.design_type === selectedDesign && v.color_name === effectiveColor);
       if (match) return match;
     }
     if (selectedDesign) return variants.find(v => v.design_type === selectedDesign) ?? variants[0];
-    if (selectedColor) return variants.find(v => v.color_name === selectedColor) ?? variants[0];
+    if (effectiveColor) return variants.find(v => v.color_name === effectiveColor) ?? variants[0];
     return variants[0];
-  }, [variants, selectedDesign, selectedColor]);
+  }, [variants, selectedDesign, effectiveColor]);
 
   const { data: variantImages = [] } = useQuery({
     queryKey: ['product-view-images', id, activeVariant?.id ?? null],
