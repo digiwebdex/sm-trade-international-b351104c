@@ -13,7 +13,6 @@ import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Search, ChevronLeft, 
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import BulkUploadZone, { type FileItem } from '@/components/admin/BulkUploadZone';
-import ProductImageManager from '@/components/admin/ProductImageManager';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 12;
@@ -448,14 +447,6 @@ const AdminProducts = () => {
                     </Button>
                   )}
                 </div>
-
-                {/* Additional images (edit mode only) */}
-                {editId && (
-                  <div className="border border-border/50 rounded-xl p-3 bg-muted/20">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Additional Product Images</p>
-                    <ProductImageManager productId={editId} />
-                  </div>
-                )}
 
                 <div className="flex items-center gap-2">
                   <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
