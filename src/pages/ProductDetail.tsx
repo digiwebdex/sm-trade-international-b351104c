@@ -198,10 +198,7 @@ const ProductDetail = () => {
 
   // ─── Pricing ──────────────────────────────────────────────────────────
   const unitPrice = activeVariant?.unit_price ? Number(activeVariant.unit_price) : 0;
-  const currentTier = BULK_TIERS.find(t => quantity >= t.min && quantity <= t.max) ?? BULK_TIERS[0];
-  const discountedPrice = unitPrice > 0 ? unitPrice * (1 - currentTier.discount / 100) : 0;
-  const totalPrice = discountedPrice * quantity;
-  const savings = unitPrice > 0 ? (unitPrice - discountedPrice) * quantity : 0;
+  const totalPrice = unitPrice * quantity;
 
   // ─── Handlers ─────────────────────────────────────────────────────────
   const handleDesignSelect = (design: string) => {
