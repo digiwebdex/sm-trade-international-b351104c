@@ -161,7 +161,7 @@ const ProductImageManager = ({ productId, variantId = null }: ProductImageManage
       const scope = variantId ? `variant-${variantId}` : `product-${productId}`;
       const path = `product-views/${scope}/${imageType}-${Date.now()}.webp`;
 
-      const { error: uploadErr } = await supabase.storage.from('cms-images').upload(path, uploadBlob, { contentType: 'image/webp' });
+      const { error: uploadErr } = await supabase.storage.from('cms-images').upload(path, uploadBlob);
       if (uploadErr) throw uploadErr;
       updateUploadingFile(uploadId, { progress: 80 });
 
