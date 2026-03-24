@@ -39,6 +39,7 @@ interface Product {
   categoryLabelBn?: string;
   features?: string[];
   productCode?: string;
+  price?: number;
 }
 
 const staticProducts: Product[] = [
