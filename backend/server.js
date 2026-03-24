@@ -1,7 +1,12 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+require('dotenv').config({
+  path: path.join(__dirname, '.env'),
+  override: true,
+});
+
 const pool = require('./db');
 
 const authRoutes = require('./routes/auth');
@@ -47,5 +52,9 @@ app.get('*', (_req, res) => {
 
 // ── Start ───────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
+  const dbHost = process.env.DB_HOST || 'localhost';
+  const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
+  const dbName = process.env.DB_NAME || 'smtrade_db';
+  console.log(`🗄️ DB target ${dbHost}:${dbPort}/${dbName}`);
   console.log(`✅ SM Trade API running on port ${PORT}`);
 });
