@@ -14,6 +14,8 @@ interface StatCard {
   path: string;
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<StatCard[]>([]);
@@ -23,33 +25,42 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [products, categories, gallery, clients, messages, quotes, pendingQuotes] = await Promise.all([
-        supabase.from('products').select('id', { count: 'exact', head: true }),
-        supabase.from('categories').select('id', { count: 'exact', head: true }),
-        supabase.from('gallery').select('id', { count: 'exact', head: true }),
-        supabase.from('client_logos').select('id', { count: 'exact', head: true }),
-        supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_read', false),
-        supabase.from('quote_requests').select('id', { count: 'exact', head: true }),
-        supabase.from('quote_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      ]);
+      try {
+        // Use the dedicated dashboard/stats endpoint
+        const token = localStorage.getItem('auth_token');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const statsResp = await fetch(`${API_BASE}/dashboard/stats`, { headers });
+        const statsData = statsResp.ok ? await statsResp.json() : { totalProducts: 0, totalCategories: 0, unreadMessages: 0, pendingQuotes: 0 };
 
-      setStats([
-        { label: 'Products', value: products.count ?? 0, icon: Package, color: 'text-blue-500', path: '/admin/products' },
-        { label: 'Categories', value: categories.count ?? 0, icon: FolderOpen, color: 'text-green-500', path: '/admin/categories' },
-        { label: 'Gallery Items', value: gallery.count ?? 0, icon: Image, color: 'text-purple-500', path: '/admin/gallery' },
-        { label: 'Clients', value: clients.count ?? 0, icon: Users, color: 'text-orange-500', path: '/admin/clients' },
-        { label: 'Unread Messages', value: messages.count ?? 0, icon: Mail, color: 'text-red-500', path: '/admin/messages' },
-        { label: 'Quote Requests', value: quotes.count ?? 0, icon: FileText, color: 'text-emerald-500', path: '/admin/quotes' },
-      ]);
+        // Count other tables
+        const [gallery, clients, allQuotes] = await Promise.all([
+          supabase.from('gallery').select('id'),
+          supabase.from('client_logos').select('id'),
+          supabase.from('quote_requests').select('id'),
+        ]);
 
-      // Fetch recent data
-      const [quotesData, messagesData] = await Promise.all([
-        supabase.from('quote_requests').select('*').order('created_at', { ascending: false }).limit(5),
-        supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(5),
-      ]);
+        setStats([
+          { label: 'Products', value: statsData.totalProducts, icon: Package, color: 'text-blue-500', path: '/admin/products' },
+          { label: 'Categories', value: statsData.totalCategories, icon: FolderOpen, color: 'text-green-500', path: '/admin/categories' },
+          { label: 'Gallery Items', value: gallery.data?.length ?? 0, icon: Image, color: 'text-purple-500', path: '/admin/gallery' },
+          { label: 'Clients', value: clients.data?.length ?? 0, icon: Users, color: 'text-orange-500', path: '/admin/clients' },
+          { label: 'Unread Messages', value: statsData.unreadMessages, icon: Mail, color: 'text-red-500', path: '/admin/messages' },
+          { label: 'Quote Requests', value: allQuotes.data?.length ?? 0, icon: FileText, color: 'text-emerald-500', path: '/admin/quotes' },
+        ]);
 
-      setRecentQuotes(quotesData.data ?? []);
-      setRecentMessages(messagesData.data ?? []);
+        // Fetch recent data
+        const [quotesData, messagesData] = await Promise.all([
+          supabase.from('quote_requests').select('*').order('created_at', { ascending: false }).limit(5),
+          supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(5),
+        ]);
+
+        setRecentQuotes(quotesData.data ?? []);
+        setRecentMessages(messagesData.data ?? []);
+      } catch (err) {
+        console.error('Dashboard stats error:', err);
+      }
       setLoading(false);
     };
     fetchStats();

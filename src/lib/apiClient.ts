@@ -178,6 +178,7 @@ class QueryBuilder {
         this._filters.every(f => {
           if (f.op === 'eq') return row[f.column] === f.value || String(row[f.column]) === String(f.value);
           if (f.op === 'neq') return row[f.column] !== f.value;
+          if (f.op === 'is_null') return row[f.column] === null || row[f.column] === undefined;
           return true;
         })
       );
