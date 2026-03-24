@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuoteBasket } from '@/contexts/QuoteBasketContext';
 import {
   ArrowLeft, ShoppingBag, MessageCircle, Share2,
-  ChevronRight, Minus, Plus, Calculator, Package, CheckCircle2
+  ChevronRight, Minus, Plus, Package, CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
