@@ -318,13 +318,6 @@ const ProductDetail = () => {
               </button>
             </div>
 
-            {/* Total price summary */}
-            {unitPrice > 0 && quantity > 1 && (
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{quantity} × ৳{unitPrice.toLocaleString()}</span>
-                <span className="font-bold text-lg text-foreground">৳{totalPrice.toLocaleString()}</span>
-              </div>
-            )}
           </div>
         </div>
 
