@@ -449,6 +449,11 @@ const AdminProducts = () => {
                   )}
                 </div>
 
+                {/* Color Variants (only show when editing existing product) */}
+                {editId && (
+                  <ColorVariantManager productId={editId} basePrice={form.unit_price} />
+                )}
+
                 <div className="flex items-center gap-2">
                   <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
                   <label className="text-sm">Active (visible on site)</label>
