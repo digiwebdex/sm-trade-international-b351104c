@@ -19,12 +19,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isUUID, productSlug } from '@/lib/productSlug';
 
-const BULK_TIERS = [
-  { min: 1, max: 49, discount: 0, label: '1–49' },
-  { min: 50, max: 99, discount: 5, label: '50–99' },
-  { min: 100, max: 499, discount: 10, label: '100–499' },
-  { min: 500, max: Infinity, discount: 15, label: '500+' },
-];
+
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
