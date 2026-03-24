@@ -1,17 +1,8 @@
 /**
  * Frontend API Client — Drop-in replacement for Supabase client
  * 
- * MIGRATION GUIDE:
- * After cloning to VPS, replace all `supabase` imports with this module.
- * 
- * Before: import { supabase } from '@/integrations/supabase/client';
- *         const { data } = await supabase.from('products').select('*');
- * 
- * After:  import { api } from '@/lib/apiClient';
- *         const data = await api.from('products').select();
- * 
- * This file provides a Supabase-like query builder that translates
- * to REST API calls against the Express backend.
+ * Supports Supabase-style chaining:
+ *   supabase.from('products').select('*').eq('is_active', true).order('sort_order')
  */
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -53,147 +44,239 @@ class QueryBuilder {
   private _orderAsc = true;
   private _limitVal?: number;
   private _single = false;
+  private _selectCols?: string;
+  private _method: 'select' | 'insert' | 'update' | 'delete' | 'upsert' | null = null;
+  private _payload?: any;
+  private _notFilters: Array<{ column: string; op: string; value: any }> = [];
+  private _inFilters: Array<{ column: string; values: any[] }> = [];
+  private _maybeSingle = false;
 
   constructor(table: string) {
     this.table = table;
   }
 
-  eq(column: string, value: any) {
+  eq(column: string, value: any): this {
     this._filters.push({ column, op: 'eq', value });
     return this;
   }
 
-  neq(column: string, value: any) {
+  neq(column: string, value: any): this {
     this._filters.push({ column, op: 'neq', value });
     return this;
   }
 
-  order(column: string, opts?: { ascending?: boolean }) {
+  not(column: string, op: string, value: any): this {
+    this._notFilters.push({ column, op, value });
+    return this;
+  }
+
+  in(column: string, values: any[]): this {
+    this._inFilters.push({ column, values });
+    return this;
+  }
+
+  order(column: string, opts?: { ascending?: boolean }): this {
     this._orderCol = column;
     this._orderAsc = opts?.ascending !== false;
     return this;
   }
 
-  limit(n: number) {
+  limit(n: number): this {
     this._limitVal = n;
     return this;
   }
 
-  single() {
+  single(): this {
     this._single = true;
     return this;
   }
 
-  private buildParams(): URLSearchParams {
-    const p = new URLSearchParams();
-    this._filters.forEach(f => p.append(`filter_${f.column}`, `${f.op}:${f.value}`));
-    if (this._orderCol) p.set('order', `${this._orderCol}:${this._orderAsc ? 'asc' : 'desc'}`);
-    if (this._limitVal) p.set('limit', String(this._limitVal));
-    return p;
+  maybeSingle(): this {
+    this._maybeSingle = true;
+    this._single = true;
+    return this;
   }
 
-  async select(columns?: string): Promise<{ data: any; error: any }> {
+  select(columns?: string): this {
+    this._method = 'select';
+    this._selectCols = columns;
+    return this;
+  }
+
+  insert(payload: any): this {
+    this._method = 'insert';
+    this._payload = payload;
+    return this;
+  }
+
+  update(payload: any): this {
+    this._method = 'update';
+    this._payload = payload;
+    return this;
+  }
+
+  delete(): this {
+    this._method = 'delete';
+    return this;
+  }
+
+  upsert(payload: any): this {
+    this._method = 'upsert';
+    this._payload = payload;
+    return this;
+  }
+
+  // Make the builder thenable — this is what allows `await supabase.from(...).select(...).eq(...)`
+  then(
+    resolve?: ((value: { data: any; error: any }) => any) | null,
+    reject?: ((reason: any) => any) | null
+  ): Promise<any> {
+    return this._execute().then(resolve, reject);
+  }
+
+  private async _execute(): Promise<{ data: any; error: any }> {
     try {
-      const params = this.buildParams();
-      if (columns) params.set('select', columns);
-      const url = `${tableUrl(this.table)}?${params}`;
-      const resp = await fetch(url, { headers: getHeaders() });
-      if (!resp.ok) throw new Error(await resp.text());
-      let data = await resp.json();
-
-      // Client-side filtering (backend returns all, we filter here for compatibility)
-      if (this._filters.length > 0) {
-        data = data.filter((row: any) =>
-          this._filters.every(f => {
-            if (f.op === 'eq') return row[f.column] === f.value || String(row[f.column]) === String(f.value);
-            if (f.op === 'neq') return row[f.column] !== f.value;
-            return true;
-          })
-        );
+      switch (this._method) {
+        case 'select':
+          return await this._doSelect();
+        case 'insert':
+          return await this._doInsert();
+        case 'update':
+          return await this._doUpdate();
+        case 'delete':
+          return await this._doDelete();
+        case 'upsert':
+          return await this._doUpsert();
+        default:
+          // Default to select if no method specified
+          return await this._doSelect();
       }
-
-      // Client-side ordering
-      if (this._orderCol) {
-        const col = this._orderCol;
-        const asc = this._orderAsc;
-        data.sort((a: any, b: any) => {
-          if (a[col] < b[col]) return asc ? -1 : 1;
-          if (a[col] > b[col]) return asc ? 1 : -1;
-          return 0;
-        });
-      }
-
-      if (this._limitVal) data = data.slice(0, this._limitVal);
-      if (this._single) return { data: data[0] || null, error: null };
-      return { data, error: null };
     } catch (err: any) {
       return { data: null, error: { message: err.message } };
     }
   }
 
-  async insert(payload: any): Promise<{ data: any; error: any }> {
-    try {
-      // Handle public insert endpoints
-      let url = tableUrl(this.table);
-      const isPublicTable = ['contact_messages', 'quote_requests'].includes(this.table);
-      if (isPublicTable && !authToken) {
-        url = `${tableUrl(this.table)}/public`;
-      }
+  private async _doSelect(): Promise<{ data: any; error: any }> {
+    const params = new URLSearchParams();
+    if (this._selectCols) params.set('select', this._selectCols);
 
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
+    const url = `${tableUrl(this.table)}?${params}`;
+    const resp = await fetch(url, { headers: getHeaders() });
+    if (!resp.ok) throw new Error(await resp.text());
+    let data = await resp.json();
+
+    // Client-side filtering
+    if (this._filters.length > 0) {
+      data = data.filter((row: any) =>
+        this._filters.every(f => {
+          if (f.op === 'eq') return row[f.column] === f.value || String(row[f.column]) === String(f.value);
+          if (f.op === 'neq') return row[f.column] !== f.value;
+          return true;
+        })
+      );
+    }
+
+    // Not filters
+    if (this._notFilters.length > 0) {
+      data = data.filter((row: any) =>
+        this._notFilters.every(f => {
+          if (f.op === 'is' && f.value === null) return row[f.column] !== null;
+          return true;
+        })
+      );
+    }
+
+    // In filters
+    if (this._inFilters.length > 0) {
+      data = data.filter((row: any) =>
+        this._inFilters.every(f => f.values.includes(row[f.column]))
+      );
+    }
+
+    // Client-side ordering
+    if (this._orderCol) {
+      const col = this._orderCol;
+      const asc = this._orderAsc;
+      data.sort((a: any, b: any) => {
+        if (a[col] < b[col]) return asc ? -1 : 1;
+        if (a[col] > b[col]) return asc ? 1 : -1;
+        return 0;
       });
-      if (!resp.ok) throw new Error(await resp.text());
-      const data = await resp.json();
-      return { data, error: null };
-    } catch (err: any) {
-      return { data: null, error: { message: err.message } };
     }
+
+    if (this._limitVal) data = data.slice(0, this._limitVal);
+    if (this._single) return { data: data[0] || null, error: null };
+    return { data, error: null };
   }
 
-  async update(payload: any): Promise<{ data: any; error: any }> {
-    try {
-      const idFilter = this._filters.find(f => f.column === 'id');
-      if (!idFilter) throw new Error('update() requires .eq("id", value)');
+  private async _doInsert(): Promise<{ data: any; error: any }> {
+    let url = tableUrl(this.table);
+    const isPublicTable = ['contact_messages', 'quote_requests'].includes(this.table);
+    if (isPublicTable && !authToken) {
+      url = `${tableUrl(this.table)}/public`;
+    }
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(this._payload),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    return { data, error: null };
+  }
+
+  private async _doUpdate(): Promise<{ data: any; error: any }> {
+    const idFilter = this._filters.find(f => f.column === 'id');
+    const keyFilter = this._filters.find(f => f.column === 'setting_key');
+    
+    if (idFilter) {
       const resp = await fetch(`${tableUrl(this.table)}/${idFilter.value}`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify(payload),
+        body: JSON.stringify(this._payload),
       });
       if (!resp.ok) throw new Error(await resp.text());
       const data = await resp.json();
       return { data, error: null };
-    } catch (err: any) {
-      return { data: null, error: { message: err.message } };
     }
-  }
-
-  async delete(): Promise<{ data: any; error: any }> {
-    try {
-      const idFilter = this._filters.find(f => f.column === 'id');
-      if (!idFilter) throw new Error('delete() requires .eq("id", value)');
-      const resp = await fetch(`${tableUrl(this.table)}/${idFilter.value}`, {
-        method: 'DELETE',
+    
+    // For site_settings updates by setting_key, use the POST (upsert) endpoint
+    if (keyFilter && this.table === 'site_settings') {
+      const resp = await fetch(tableUrl(this.table), {
+        method: 'POST',
         headers: getHeaders(),
+        body: JSON.stringify({ setting_key: keyFilter.value, ...this._payload }),
       });
       if (!resp.ok) throw new Error(await resp.text());
-      return { data: null, error: null };
-    } catch (err: any) {
-      return { data: null, error: { message: err.message } };
+      const data = await resp.json();
+      return { data, error: null };
     }
+
+    throw new Error('update() requires .eq("id", value) or .eq("setting_key", value)');
   }
 
-  async upsert(payload: any): Promise<{ data: any; error: any }> {
-    // For site_settings, use the POST endpoint which does upsert
-    if (this.table === 'site_settings') {
-      return this.insert(payload);
-    }
-    // Generic: try update, if not found, insert
+  private async _doDelete(): Promise<{ data: any; error: any }> {
     const idFilter = this._filters.find(f => f.column === 'id');
-    if (idFilter) return this.update(payload);
-    return this.insert(payload);
+    if (!idFilter) throw new Error('delete() requires .eq("id", value)');
+    const resp = await fetch(`${tableUrl(this.table)}/${idFilter.value}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    return { data: null, error: null };
+  }
+
+  private async _doUpsert(): Promise<{ data: any; error: any }> {
+    if (this.table === 'site_settings') {
+      return this._doInsert();
+    }
+    const idFilter = this._filters.find(f => f.column === 'id');
+    if (idFilter) {
+      this._method = 'update';
+      return this._doUpdate();
+    }
+    return this._doInsert();
   }
 }
 
@@ -261,7 +344,6 @@ const auth = {
     if (token && user) {
       authToken = token;
       currentUser = JSON.parse(user);
-      // Validate token
       try {
         const resp = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
         if (!resp.ok) throw new Error('Token expired');
@@ -278,7 +360,6 @@ const auth = {
       callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user ? { user, access_token: authToken } : null);
     };
     authListeners.add(listener);
-    // Fire immediately with current state
     const user = localStorage.getItem('auth_user');
     if (user) listener(JSON.parse(user));
     else listener(null);
@@ -286,7 +367,7 @@ const auth = {
     return {
       data: {
         subscription: {
-          unsubscribe: () => authListeners.delete(listener),
+          unsubscribe: () => { authListeners.delete(listener); },
         },
       },
     };
@@ -298,7 +379,6 @@ export const api = {
   from: (table: string) => new QueryBuilder(table),
   storage: { from: (bucket: string) => createStorageBucket(bucket) },
   auth,
-  // Realtime stub — not needed for self-hosted, no-op
   channel: (_name: string) => ({
     on: () => ({ subscribe: () => ({}) }),
   }),
