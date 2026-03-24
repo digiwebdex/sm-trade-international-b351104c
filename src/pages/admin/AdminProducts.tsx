@@ -519,11 +519,12 @@ interface ProductForm {
   image_url: string;
   is_active: boolean;
   product_code: string;
+  base_price: number;
 }
 
 const emptyForm: ProductForm = {
   name_en: '', name_bn: '', description_en: '', description_bn: '',
-  category_id: '', image_url: '', is_active: true, product_code: '',
+  category_id: '', image_url: '', is_active: true, product_code: '', base_price: 0,
 };
 
 const slugify = (str: string) =>
@@ -671,7 +672,7 @@ const AdminProducts = () => {
               is_active: v.is_active,
               image_url: v.imageUrl || null,
               min_quantity: 1,
-              unit_price: 0,
+              unit_price: v.unit_price || form.base_price || 0,
               sort_order: idx + 1,
             }));
             await supabase.from('product_variants').insert(variantRows as any);
@@ -746,6 +747,7 @@ const AdminProducts = () => {
       image_url: prod.image_url ?? '',
       is_active: prod.is_active,
       product_code: (prod as any).product_code ?? '',
+      base_price: 0,
     });
     setDialogOpen(true);
   };
@@ -939,6 +941,53 @@ const AdminProducts = () => {
                     <Textarea value={form.description_bn} onChange={e => setForm(f => ({ ...f, description_bn: e.target.value }))} rows={3} />
                   </div>
                 </div>
+
+                {/* Base Price */}
+                <div className="border border-border/50 rounded-xl p-3 bg-muted/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold">Product Price (৳)</label>
+                    {editId && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={async () => {
+                          if (!form.base_price || form.base_price <= 0) {
+                            toast({ title: 'Enter a price first', variant: 'destructive' });
+                            return;
+                          }
+                          const { error } = await supabase
+                            .from('product_variants')
+                            .update({ unit_price: form.base_price } as any)
+                            .eq('product_id', editId);
+                          if (error) {
+                            toast({ title: 'Failed to update prices', description: error.message, variant: 'destructive' });
+                            return;
+                          }
+                          toast({ title: `Price ৳${form.base_price} applied to all variants` });
+                          queryClient.invalidateQueries({ queryKey: ['admin-variants', editId] });
+                        }}
+                      >
+                        Apply to all variants
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.base_price || ''}
+                    onChange={e => setForm(f => ({ ...f, base_price: Math.max(0, Number(e.target.value)) }))}
+                    placeholder="Enter unit price"
+                    className="text-lg font-semibold"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {editId
+                      ? 'Set price here and click "Apply to all variants" or edit individual variant prices below.'
+                      : 'This price will be applied to all variants when saved.'}
+                  </p>
+                </div>
+
                 <div>
                   <label className="text-sm font-medium">Product Image</label>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden"
