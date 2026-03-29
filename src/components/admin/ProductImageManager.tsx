@@ -8,7 +8,7 @@ import { supabase } from '@/lib/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, Loader2, ImageIcon, GripVertical, Plus, Camera, X, CheckCircle2 } from 'lucide-react';
+import { Upload, Trash2, Loader2, ImageIcon, GripVertical, Plus, Camera, X, CheckCircle2, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
@@ -25,6 +25,8 @@ const IMAGE_VIEWS: { type: ImageType; label: string }[] = [
 interface ProductImageManagerProps {
   productId: string;
   variantId?: string | null;
+  featuredImageUrl?: string;
+  onSetFeatured?: (imageUrl: string) => void;
 }
 
 interface ProductImage {
@@ -46,7 +48,7 @@ interface UploadingFile {
   error?: string;
 }
 
-const ProductImageManager = ({ productId, variantId = null }: ProductImageManagerProps) => {
+const ProductImageManager = ({ productId, variantId = null, featuredImageUrl, onSetFeatured }: ProductImageManagerProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
@@ -298,7 +300,23 @@ const ProductImageManager = ({ productId, variantId = null }: ProductImageManage
                         className="w-full h-full object-contain p-1"
                         loading="lazy"
                       />
+                      {/* Featured badge */}
+                      {featuredImageUrl && img.image_url === featuredImageUrl && (
+                        <div className="absolute top-1 left-1 z-10">
+                          <Star className="h-4 w-4 text-[hsl(var(--sm-gold))] fill-[hsl(var(--sm-gold))]" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        {onSetFeatured && img.image_url !== featuredImageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => onSetFeatured(img.image_url)}
+                            className="p-1.5 bg-[hsl(var(--sm-gold))]/90 rounded-full hover:bg-[hsl(var(--sm-gold))] transition-colors"
+                            title="Set as Featured"
+                          >
+                            <Star className="h-3 w-3 text-white" />
+                          </button>
+                        )}
                         <label className="cursor-pointer p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors" title="Replace">
                           <Upload className="h-3 w-3 text-foreground" />
                           <input
@@ -431,7 +449,23 @@ const ProductImageManager = ({ productId, variantId = null }: ProductImageManage
                     className="w-full h-full object-contain p-1"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  {/* Featured badge */}
+                  {featuredImageUrl && img.image_url === featuredImageUrl && (
+                    <div className="absolute top-1 left-1 z-10">
+                      <Star className="h-4 w-4 text-[hsl(var(--sm-gold))] fill-[hsl(var(--sm-gold))]" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                    {onSetFeatured && img.image_url !== featuredImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => onSetFeatured(img.image_url)}
+                        className="p-1.5 bg-[hsl(var(--sm-gold))]/90 rounded-full hover:bg-[hsl(var(--sm-gold))] transition-colors"
+                        title="Set as Featured"
+                      >
+                        <Star className="h-3.5 w-3.5 text-white" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => deleteMutation.mutate(img.id)}
