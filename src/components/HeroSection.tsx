@@ -23,8 +23,6 @@ const HeroSection = () => {
   const { get } = useSiteSettings();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
-  const [prevIdx, setPrevIdx] = useState(0);
-  const [animating, setAnimating] = useState(false);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchStartX = useRef(0);
@@ -72,20 +70,13 @@ const HeroSection = () => {
 
   const len = carouselItems.length;
 
-  // Direction tracking for cube rotation
-  const [direction, setDirection] = useState<'next' | 'prev'>('next');
-
-  const goTo = useCallback((idx: number, dir?: 'next' | 'prev') => {
-    if (animating || idx === current) return;
-    setDirection(dir || (idx > current ? 'next' : 'prev'));
-    setPrevIdx(current);
-    setAnimating(true);
+  const goTo = useCallback((idx: number) => {
+    if (idx === current) return;
     setCurrent(idx);
-    setTimeout(() => setAnimating(false), 700);
-  }, [current, animating]);
+  }, [current]);
 
-  const next = useCallback(() => goTo((current + 1) % len, 'next'), [goTo, current, len]);
-  const prev = useCallback(() => goTo((current - 1 + len) % len, 'prev'), [goTo, current, len]);
+  const next = useCallback(() => goTo((current + 1) % len), [goTo, current, len]);
+  const prev = useCallback(() => goTo((current - 1 + len) % len), [goTo, current, len]);
 
   useEffect(() => {
     if (paused) return;
