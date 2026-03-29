@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Plus, Trash2, GripVertical, Save, Facebook, Linkedin, Instagram, Twitter, Youtube, Globe } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Facebook, Linkedin, Instagram, Twitter, Youtube, Globe, Upload, X, ImageIcon } from 'lucide-react';
 
 /* ─── types ─── */
 interface QuickLink {
@@ -72,6 +72,9 @@ const AdminFooter = () => {
     { platform: 'instagram', url: '', icon: 'instagram' },
   ]);
   const [texts, setTexts] = useState<FooterTexts>(defaultTexts);
+  const [bgImage, setBgImage] = useState('/images/footer-bg.jpg');
+  const [uploadingBg, setUploadingBg] = useState(false);
+  const bgFileRef = useRef<HTMLInputElement>(null);
 
   // Load existing settings
   const { data: settings } = useQuery({
@@ -102,7 +105,7 @@ const AdminFooter = () => {
         { platform: 'youtube', url: c.youtube || '', icon: 'youtube' },
       ].filter(s => s.url || ['facebook', 'linkedin', 'instagram'].includes(s.platform)));
     }
-    // Load footer texts
+    // Load footer texts + bg image
     if (settings.footer) {
       const f = settings.footer as any;
       setTexts(prev => ({
@@ -116,6 +119,7 @@ const AdminFooter = () => {
         contactinfo_title_en: f.contactinfo_title_en || prev.contactinfo_title_en,
         contactinfo_title_bn: f.contactinfo_title_bn || prev.contactinfo_title_bn,
       }));
+      if (f.bg_image) setBgImage(f.bg_image);
     }
   }, [settings]);
 
@@ -144,11 +148,11 @@ const AdminFooter = () => {
       // Save quick links
       await upsertSetting('footer_links', links);
 
-      // Save footer texts
+      // Save footer texts + bg image
       await upsertSetting('footer', {
         description_en: texts.description_en,
         description_bn: texts.description_bn,
-        description: texts.description_en, // backward compat
+        description: texts.description_en,
         copyright_en: texts.copyright_en,
         copyright_bn: texts.copyright_bn,
         copyright: texts.copyright_en,
@@ -156,6 +160,7 @@ const AdminFooter = () => {
         quicklinks_title_bn: texts.quicklinks_title_bn,
         contactinfo_title_en: texts.contactinfo_title_en,
         contactinfo_title_bn: texts.contactinfo_title_bn,
+        bg_image: bgImage,
       });
 
       // Update social URLs in contact settings
@@ -213,6 +218,55 @@ const AdminFooter = () => {
           {saveMutation.isPending ? 'Saving...' : 'Save All'}
         </Button>
       </div>
+
+      {/* Footer Background Image */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5" /> Footer Background Image</CardTitle></CardHeader>
+        <CardContent>
+          <input ref={bgFileRef} type="file" accept="image/*" className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (file.size > 10 * 1024 * 1024) {
+                toast.error('Max 10MB');
+                return;
+              }
+              setUploadingBg(true);
+              try {
+                const ext = file.name.split('.').pop();
+                const path = `footer/footer-bg-${Date.now()}.${ext}`;
+                const { error } = await supabase.storage.from('cms-images').upload(path, file);
+                if (error) throw error;
+                const { data: urlData } = supabase.storage.from('cms-images').getPublicUrl(path);
+                setBgImage(urlData.publicUrl);
+                toast.success('Background uploaded! Click Save All to apply.');
+              } catch (err: any) {
+                toast.error(err.message);
+              }
+              setUploadingBg(false);
+            }}
+          />
+          {bgImage ? (
+            <div className="relative rounded-lg overflow-hidden border">
+              <img src={bgImage} alt="Footer background" className="w-full h-40 object-cover" />
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-3 opacity-0 hover:opacity-100 transition-opacity">
+                <Button size="sm" variant="secondary" onClick={() => bgFileRef.current?.click()} disabled={uploadingBg}>
+                  <Upload className="h-4 w-4 mr-1" /> {uploadingBg ? 'Uploading...' : 'Change'}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setBgImage('')}>
+                  <X className="h-4 w-4 mr-1" /> Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="outline" className="w-full h-32 flex-col gap-2" onClick={() => bgFileRef.current?.click()} disabled={uploadingBg}>
+              <Upload className="h-6 w-6 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{uploadingBg ? 'Uploading...' : 'Upload footer background image'}</span>
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">Recommended: Wide image (21:9), dark background. Max 10MB.</p>
+        </CardContent>
+      </Card>
 
       {/* Footer Texts */}
       <Card>
