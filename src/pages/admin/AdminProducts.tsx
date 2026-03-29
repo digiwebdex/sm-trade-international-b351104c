@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Search, ChevronLeft, ChevronRight, X, CheckSquare, Square, PackagePlus } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Search, ChevronLeft, ChevronRight, X, CheckSquare, Square, PackagePlus, Star } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import BulkUploadZone, { type FileItem } from '@/components/admin/BulkUploadZone';
