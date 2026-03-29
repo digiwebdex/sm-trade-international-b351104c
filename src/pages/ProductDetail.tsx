@@ -350,9 +350,6 @@ const ProductDetail = () => {
 
             {/* Buy Box */}
             <div className="rounded-lg border border-border/50 p-4 space-y-3 bg-card">
-              <div className="text-lg font-medium text-green-600">
-                {lang === 'en' ? 'In stock' : 'স্টকে আছে'}
-              </div>
 
               {/* Quantity */}
               <div className="flex items-center gap-2">
