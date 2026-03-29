@@ -219,6 +219,55 @@ const AdminFooter = () => {
         </Button>
       </div>
 
+      {/* Footer Background Image */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5" /> Footer Background Image</CardTitle></CardHeader>
+        <CardContent>
+          <input ref={bgFileRef} type="file" accept="image/*" className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (file.size > 10 * 1024 * 1024) {
+                toast.error('Max 10MB');
+                return;
+              }
+              setUploadingBg(true);
+              try {
+                const ext = file.name.split('.').pop();
+                const path = `footer/footer-bg-${Date.now()}.${ext}`;
+                const { error } = await supabase.storage.from('cms-images').upload(path, file);
+                if (error) throw error;
+                const { data: urlData } = supabase.storage.from('cms-images').getPublicUrl(path);
+                setBgImage(urlData.publicUrl);
+                toast.success('Background uploaded! Click Save All to apply.');
+              } catch (err: any) {
+                toast.error(err.message);
+              }
+              setUploadingBg(false);
+            }}
+          />
+          {bgImage ? (
+            <div className="relative rounded-lg overflow-hidden border">
+              <img src={bgImage} alt="Footer background" className="w-full h-40 object-cover" />
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-3 opacity-0 hover:opacity-100 transition-opacity">
+                <Button size="sm" variant="secondary" onClick={() => bgFileRef.current?.click()} disabled={uploadingBg}>
+                  <Upload className="h-4 w-4 mr-1" /> {uploadingBg ? 'Uploading...' : 'Change'}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setBgImage('')}>
+                  <X className="h-4 w-4 mr-1" /> Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="outline" className="w-full h-32 flex-col gap-2" onClick={() => bgFileRef.current?.click()} disabled={uploadingBg}>
+              <Upload className="h-6 w-6 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{uploadingBg ? 'Uploading...' : 'Upload footer background image'}</span>
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">Recommended: Wide image (21:9), dark background. Max 10MB.</p>
+        </CardContent>
+      </Card>
+
       {/* Footer Texts */}
       <Card>
         <CardHeader><CardTitle>Footer Text Content</CardTitle></CardHeader>
