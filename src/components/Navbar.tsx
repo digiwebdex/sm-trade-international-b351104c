@@ -105,15 +105,50 @@ const Navbar = () => {
     }
   };
 
-  const allLinks = [
-    { key: 'nav.home', href: '#home', label: 'Home' },
-    { key: 'nav.about', href: '/about', isRoute: true, label: 'About' },
-    { key: 'nav.services', href: '#services', label: 'Services' },
-    { key: 'nav.products', href: '#products', label: 'Products' },
-    { key: 'nav.gallery', href: '/gallery', isRoute: true, label: 'Gallery' },
-    { key: 'nav.configurator', href: '/configurator', isRoute: true, label: 'Configure' },
-    { key: 'nav.contact', href: '#contact', label: 'Contact' },
+  // Fetch dynamic menu from site_settings
+  const { data: menuSetting } = useQuery({
+    queryKey: ['site-settings', 'nav_menu'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('setting_key', 'nav_menu')
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  const defaultLinks = [
+    { key: 'nav.home', href: '#home', type: 'hash' as const, label_en: 'Home', label_bn: 'হোম', is_active: true },
+    { key: 'nav.about', href: '/about', type: 'route' as const, label_en: 'About', label_bn: 'আমাদের সম্পর্কে', is_active: true },
+    { key: 'nav.services', href: '#services', type: 'hash' as const, label_en: 'Services', label_bn: 'সেবা', is_active: true },
+    { key: 'nav.products', href: '#products', type: 'hash' as const, label_en: 'Products', label_bn: 'পণ্য', is_active: true },
+    { key: 'nav.gallery', href: '/gallery', type: 'route' as const, label_en: 'Gallery', label_bn: 'গ্যালারি', is_active: true },
+    { key: 'nav.configurator', href: '/configurator', type: 'route' as const, label_en: 'Configure', label_bn: 'কনফিগার', is_active: true },
+    { key: 'nav.contact', href: '#contact', type: 'hash' as const, label_en: 'Contact', label_bn: 'যোগাযোগ', is_active: true },
   ];
+
+  const menuItems = (() => {
+    const saved = (menuSetting?.setting_value as any)?.items;
+    if (Array.isArray(saved) && saved.length > 0) {
+      return saved
+        .filter((i: any) => i.is_active)
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
+        .map((i: any) => ({
+          key: `nav.${i.id}`,
+          href: i.href,
+          type: i.type as 'hash' | 'route' | 'external',
+          label_en: i.label_en,
+          label_bn: i.label_bn || i.label_en,
+          is_active: i.is_active,
+        }));
+    }
+    return defaultLinks;
+  })();
+
+  const allLinks = menuItems;
 
   const categoriesLabel = lang === 'en' ? 'Categories' : 'ক্যাটাগরি';
 
