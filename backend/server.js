@@ -44,7 +44,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/generate-quote', quoteGenRoutes);
 
 // ── Serve frontend (production) ─────────────────────────────
-const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+const frontendDist = path.join(__dirname, '..', 'dist');
 app.use(express.static(frontendDist));
 app.get('*', (_req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
