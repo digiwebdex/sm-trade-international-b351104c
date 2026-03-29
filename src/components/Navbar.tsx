@@ -230,15 +230,26 @@ const Navbar = () => {
         {/* Desktop nav links — right aligned */}
         <div className="hidden md:flex items-center gap-0 flex-shrink-0">
           {allLinks.map(l =>
-            (l as any).isRoute ? (
+            l.type === 'route' ? (
               <Link
                 key={l.key}
                 to={l.href}
                 className="relative px-3 py-2 font-medium text-[13px] text-foreground/75 hover:text-foreground transition-colors duration-200 group whitespace-nowrap"
               >
-                {t(l.key)}
+                {lang === 'en' ? l.label_en : l.label_bn}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[hsl(var(--sm-gold))] group-hover:w-3/4 transition-all duration-300 rounded-full" />
               </Link>
+            ) : l.type === 'external' ? (
+              <a
+                key={l.key}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative px-3 py-2 font-medium text-[13px] text-foreground/75 hover:text-foreground transition-colors duration-200 group whitespace-nowrap"
+              >
+                {lang === 'en' ? l.label_en : l.label_bn}
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[hsl(var(--sm-gold))] group-hover:w-3/4 transition-all duration-300 rounded-full" />
+              </a>
             ) : (
               <a
                 key={l.key}
@@ -246,7 +257,7 @@ const Navbar = () => {
                 onMouseEnter={!isHome ? prefetchHome : undefined}
                 className="relative px-3 py-2 font-medium text-[13px] text-foreground/75 hover:text-foreground transition-colors duration-200 group whitespace-nowrap"
               >
-                {t(l.key)}
+                {lang === 'en' ? l.label_en : l.label_bn}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[hsl(var(--sm-gold))] group-hover:w-3/4 transition-all duration-300 rounded-full" />
               </a>
             )
