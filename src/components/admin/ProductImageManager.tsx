@@ -300,7 +300,23 @@ const ProductImageManager = ({ productId, variantId = null, featuredImageUrl, on
                         className="w-full h-full object-contain p-1"
                         loading="lazy"
                       />
+                      {/* Featured badge */}
+                      {featuredImageUrl && img.image_url === featuredImageUrl && (
+                        <div className="absolute top-1 left-1 z-10">
+                          <Star className="h-4 w-4 text-[hsl(var(--sm-gold))] fill-[hsl(var(--sm-gold))]" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        {onSetFeatured && img.image_url !== featuredImageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => onSetFeatured(img.image_url)}
+                            className="p-1.5 bg-[hsl(var(--sm-gold))]/90 rounded-full hover:bg-[hsl(var(--sm-gold))] transition-colors"
+                            title="Set as Featured"
+                          >
+                            <Star className="h-3 w-3 text-white" />
+                          </button>
+                        )}
                         <label className="cursor-pointer p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors" title="Replace">
                           <Upload className="h-3 w-3 text-foreground" />
                           <input
