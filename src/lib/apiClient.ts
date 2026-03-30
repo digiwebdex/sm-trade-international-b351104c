@@ -5,7 +5,53 @@
  *   supabase.from('products').select('*').eq('is_active', true).order('sort_order')
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const PREVIEW_HOST_MARKERS = ['lovableproject.com', 'id-preview--', 'lovable.app'];
+const DEFAULT_PUBLIC_ORIGIN = 'https://smtradeint.com';
+const isBrowser = typeof window !== 'undefined';
+const hostname = isBrowser ? window.location.hostname : '';
+const isPreviewHost = PREVIEW_HOST_MARKERS.some(marker => hostname.includes(marker));
+
+export const PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_SITE_ORIGIN
+  || (isPreviewHost ? DEFAULT_PUBLIC_ORIGIN : (isBrowser ? window.location.origin : DEFAULT_PUBLIC_ORIGIN));
+
+export const API_BASE = import.meta.env.VITE_API_BASE_URL
+  || (isPreviewHost ? `${DEFAULT_PUBLIC_ORIGIN}/api` : '/api');
+
+const TABLE_ASSET_FIELDS: Record<string, string[]> = {
+  about_page: ['image_url'],
+  client_logos: ['logo_url'],
+  gallery: ['image_url'],
+  hero_slides: ['image_url'],
+  product_images: ['image_url'],
+  product_variant_images: ['image_url'],
+  product_variants: ['image_url'],
+  products: ['image_url'],
+  seo_meta: ['og_image_url'],
+};
+
+function normalizeAssetUrl(value: unknown): unknown {
+  if (typeof value !== 'string' || !value.trim()) return value;
+  if (/^(https?:|data:|blob:|mailto:|tel:)/i.test(value)) return value;
+
+  const trimmed = value.trim();
+  if (trimmed.startsWith('/uploads/')) return `${PUBLIC_ORIGIN}${trimmed}`;
+  if (trimmed.startsWith('uploads/')) return `${PUBLIC_ORIGIN}/${trimmed}`;
+  if (trimmed.startsWith('/')) return `${PUBLIC_ORIGIN}${trimmed}`;
+
+  return trimmed;
+}
+
+function normalizeRowAssets(table: string, row: any) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) return row;
+
+  const assetFields = TABLE_ASSET_FIELDS[table];
+  if (!assetFields?.length) return row;
+
+  return assetFields.reduce((acc, field) => {
+    if (field in acc) acc[field] = normalizeAssetUrl(acc[field]);
+    return acc;
+  }, { ...row });
+}
 
 // ── Token management ────────────────────────────────────────
 let authToken: string | null = localStorage.getItem('auth_token');
@@ -171,6 +217,12 @@ class QueryBuilder {
     const resp = await fetch(url, { headers: getHeaders() });
     if (!resp.ok) throw new Error(await resp.text());
     let data = await resp.json();
+
+    if (Array.isArray(data)) {
+      data = data.map(row => normalizeRowAssets(this.table, row));
+    } else if (data && typeof data === 'object') {
+      data = normalizeRowAssets(this.table, data);
+    }
 
     // Client-side filtering
     if (this._filters.length > 0) {
@@ -364,8 +416,7 @@ function createStorageBucket(bucket: string) {
       return { data: { path: data.path, publicUrl: data.publicUrl }, error: null };
     },
     getPublicUrl(filePath: string) {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || '';
-      return { data: { publicUrl: `${baseUrl}/uploads/${bucket}/${filePath}` } };
+        return { data: { publicUrl: `${PUBLIC_ORIGIN}/uploads/${bucket}/${filePath}` } };
     },
   };
 }

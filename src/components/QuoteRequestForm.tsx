@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/lib/apiClient';
+import { API_BASE, supabase } from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -60,9 +60,8 @@ const QuoteRequestForm = () => {
     setGeneratedQuote('');
 
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
       const resp = await fetch(
-        `${apiBase}/generate-quote`,
+        `${API_BASE}/generate-quote`,
         {
           method: 'POST',
           headers: {

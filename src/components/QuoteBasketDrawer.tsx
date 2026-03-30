@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuoteBasket } from '@/contexts/QuoteBasketContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { API_BASE } from '@/lib/apiClient';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,8 +48,7 @@ const QuoteBasketDrawer = () => {
 
     setSending(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
-      const resp = await fetch(`${apiBase}/send-quote-email`, {
+      const resp = await fetch(`${API_BASE}/send-quote-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
