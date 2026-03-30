@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/apiClient';
+import { API_BASE, supabase } from '@/lib/apiClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +13,6 @@ interface StatCard {
   color: string;
   path: string;
 }
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
