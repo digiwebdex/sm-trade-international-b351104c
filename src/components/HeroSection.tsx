@@ -309,7 +309,7 @@ const HeroSection = () => {
               {carouselItems.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => goTo(i)}
+                  onClick={() => goTo(i, i > current ? 'next' : 'prev')}
                   className={`rounded-full transition-all duration-500 ${
                     i === current
                       ? 'w-6 h-2 bg-accent shadow-sm shadow-accent/40'
