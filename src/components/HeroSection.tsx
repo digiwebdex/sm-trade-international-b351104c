@@ -73,13 +73,17 @@ const HeroSection = () => {
 
   const len = carouselItems.length;
 
-  const goTo = useCallback((idx: number) => {
-    if (idx === current) return;
+  const goTo = useCallback((idx: number, dir: 'next' | 'prev' = 'next') => {
+    if (idx === current || rotating) return;
+    directionRef.current = dir;
+    setPrevIdx(current);
+    setRotating(true);
     setCurrent(idx);
-  }, [current]);
+    setTimeout(() => setRotating(false), 700);
+  }, [current, rotating]);
 
-  const next = useCallback(() => goTo((current + 1) % len), [goTo, current, len]);
-  const prev = useCallback(() => goTo((current - 1 + len) % len), [goTo, current, len]);
+  const next = useCallback(() => goTo((current + 1) % len, 'next'), [goTo, current, len]);
+  const prev = useCallback(() => goTo((current - 1 + len) % len, 'prev'), [goTo, current, len]);
 
   useEffect(() => {
     if (paused) return;
