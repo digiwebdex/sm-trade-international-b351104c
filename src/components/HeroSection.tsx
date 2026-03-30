@@ -15,8 +15,8 @@ let hasAnimated = false;
 // Stats are now fetched from site settings
 
 const SPEED = 3500;
-const CUBE_SIZE = 280;
-
+const CUBE_SIZE = 300;
+const HALF = CUBE_SIZE / 2;
 
 const HeroSection = () => {
   const { t, lang } = useLanguage();
