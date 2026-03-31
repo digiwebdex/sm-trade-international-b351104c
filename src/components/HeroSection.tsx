@@ -10,6 +10,7 @@ import OptimizedImage from '@/components/OptimizedImage';
 import { productSlug } from '@/lib/productSlug';
 
 const SPEED = 5000;
+const PRODUCT_SPEED = 3000;
 
 const HeroSection = () => {
   const { lang } = useLanguage();
