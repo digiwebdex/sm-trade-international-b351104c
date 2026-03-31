@@ -37,10 +37,13 @@ const ProductCarousel = ({
 
   if (count === 0) return null;
 
+  const goNext = () => setAngle(a => a - theta);
+  const goPrev = () => setAngle(a => a + theta);
+
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 420, height: 400, perspective: '1000px' }}>
+    <div className="relative flex flex-col items-center justify-center" style={{ width: 420, height: 440, perspective: '1000px' }}>
       <div
-        className="relative w-full h-full"
+        className="relative w-full flex-1"
         style={{
           transformStyle: 'preserve-3d',
           transform: `rotateY(${angle}deg)`,
@@ -83,9 +86,44 @@ const ProductCarousel = ({
         })}
       </div>
 
+      {/* Slider controls */}
+      <div className="flex items-center gap-4 mt-4 z-10">
+        <button
+          onClick={goPrev}
+          className="w-9 h-9 rounded-full border border-white/20 bg-black/30 backdrop-blur flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 transition-all"
+          aria-label="Previous product"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-1.5">
+          {products.map((_, i) => {
+            const currentIdx = Math.round((-angle % 360 + 360) % 360 / theta) % count;
+            return (
+              <button
+                key={i}
+                onClick={() => setAngle(-theta * i)}
+                className={`rounded-full transition-all duration-400 ${
+                  i === currentIdx
+                    ? 'w-6 h-2 bg-accent shadow-md'
+                    : 'w-2 h-2 bg-white/25 hover:bg-white/50'
+                }`}
+                aria-label={`Product ${i + 1}`}
+              />
+            );
+          })}
+        </div>
+        <button
+          onClick={goNext}
+          className="w-9 h-9 rounded-full border border-white/20 bg-black/30 backdrop-blur flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 transition-all"
+          aria-label="Next product"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* Floor reflection */}
       <div
-        className="absolute bottom-2 left-1/2 -translate-x-1/2 w-64 h-8 rounded-full opacity-15"
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 w-64 h-8 rounded-full opacity-15"
         style={{ background: 'radial-gradient(ellipse, hsl(var(--sm-gold) / 0.6), transparent)' }}
       />
     </div>
