@@ -6,6 +6,8 @@ import { supabase } from '@/lib/apiClient';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import heroBg from '@/assets/hero-bg.jpg';
+import OptimizedImage from '@/components/OptimizedImage';
+import { generateProductSlug } from '@/lib/productSlug';
 
 const SPEED = 5000;
 
