@@ -155,9 +155,9 @@ const HeroSection = () => {
       ))}
 
       {/* Content overlay */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col lg:flex-row items-center min-h-[500px] md:min-h-[600px] lg:min-h-[700px] gap-8">
-        {/* Left: Text content */}
-        <div className="flex-1 max-w-2xl py-16 md:py-24">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center min-h-[500px] md:min-h-[600px] lg:min-h-[700px]">
+        {/* Text content */}
+        <div className="max-w-2xl py-16 md:py-24">
           {/* Badge */}
           <div className="inline-block px-3 py-1 rounded-full border border-white/15 bg-white/5 backdrop-blur-sm mb-5">
             <span className="text-xs font-medium tracking-widest uppercase text-white/70">
@@ -203,61 +203,47 @@ const HeroSection = () => {
             </button>
           </div>
         </div>
-
-        {/* Right: Product slider */}
-        {products.length > 0 && (
-          <div className="hidden lg:flex flex-col items-center gap-4 py-16 md:py-24 w-[380px] shrink-0">
-            <div className="grid grid-cols-1 gap-4 w-full">
-              {getVisibleProducts().map((product, i) => (
-                <div
-                  key={`${product.id}-${i}`}
-                  onClick={() => navigate(`/product/${productSlug(product)}`)}
-                  className="group flex items-center gap-4 bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 cursor-pointer hover:bg-white/15 hover:border-white/25 transition-all duration-500 animate-fade-in"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
-                  <div className="w-20 h-20 rounded-lg bg-white/10 overflow-hidden shrink-0">
-                    <OptimizedImage
-                      src={product.image_url || '/placeholder.svg'}
-                      alt={lang === 'en' ? product.name_en : product.name_bn}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-semibold text-sm truncate">
-                      {lang === 'en' ? product.name_en : product.name_bn}
-                    </h3>
-                    {product.unit_price > 0 && (
-                      <p className="text-primary text-xs mt-1">
-                        ৳ {product.unit_price.toLocaleString()}
-                      </p>
-                    )}
-                    <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors">
-                      {lang === 'en' ? 'View Details →' : 'বিস্তারিত দেখুন →'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Product slider dots */}
-            {products.length > 3 && (
-              <div className="flex gap-1.5 mt-2">
-                {products.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setProductIdx(i)}
-                    className={`rounded-full transition-all duration-300 ${
-                      i === productIdx
-                        ? 'w-5 h-1.5 bg-primary'
-                        : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Product Slider - Bottom overlay */}
+      {products.length > 0 && (
+        <div className="absolute bottom-16 left-0 right-0 z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex gap-4 overflow-hidden">
+              {products.slice(0, 5).map((product, i) => {
+                const isActive = i === productIdx % Math.min(5, products.length);
+                return (
+                  <div
+                    key={product.id}
+                    onClick={() => navigate(`/product/${productSlug(product)}`)}
+                    className={`group flex items-center gap-3 rounded-xl p-2.5 cursor-pointer transition-all duration-500 shrink-0 w-[200px] sm:w-[220px] ${
+                      isActive
+                        ? 'bg-white/20 backdrop-blur-md border border-white/25 scale-105'
+                        : 'bg-white/8 backdrop-blur-sm border border-white/10 hover:bg-white/15'
+                    }`}
+                  >
+                    <div className="w-14 h-14 rounded-lg bg-white/10 overflow-hidden shrink-0">
+                      <OptimizedImage
+                        src={product.image_url || '/placeholder.svg'}
+                        alt={lang === 'en' ? product.name_en : product.name_bn}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-semibold text-xs truncate">
+                        {lang === 'en' ? product.name_en : product.name_bn}
+                      </h3>
+                      {product.unit_price > 0 && (
+                        <p className="text-primary text-[11px] mt-0.5">৳ {product.unit_price.toLocaleString()}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Navigation dots + arrows */}
       {len > 1 && (
