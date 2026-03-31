@@ -16,6 +16,8 @@ const socialIconMap: Record<string, typeof Facebook> = {
   website: Globe,
 };
 
+const DEFAULT_FOOTER_VIDEO_URL = '/__l5e/assets-v1/f394b421-1982-4efa-9fc4-1c959be7d338/footer-corporate-gifts.mp4';
+
 const Footer = () => {
   const { t, lang } = useLanguage();
   const { get } = useSiteSettings();
@@ -44,7 +46,7 @@ const Footer = () => {
     ? get('footer', 'contactinfo_title_bn', t('footer.contactinfo'))
     : get('footer', 'contactinfo_title_en', t('footer.contactinfo'));
 
-  const footerVideoUrl = get('footer', 'video_url', 'https://videos.pexels.com/video-files/6578977/6578977-uhd_2560_1440_30fps.mp4');
+  const footerVideoUrl = get('footer', 'video_url', DEFAULT_FOOTER_VIDEO_URL) || DEFAULT_FOOTER_VIDEO_URL;
   const footerBgImage = get('footer', 'bg_image', '/images/footer-bg.jpg');
 
   const { data: allSettings } = useQuery({
@@ -106,7 +108,9 @@ const Footer = () => {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover"
+            preload="auto"
+            poster={footerBgImage}
+            className="w-full h-full object-cover opacity-80"
           />
         ) : (
           <img
@@ -117,8 +121,8 @@ const Footer = () => {
           />
         )}
         {/* Dark overlay with brand tint */}
-        <div className="absolute inset-0 bg-[hsl(var(--sm-green-dark))]/90" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--sm-black))]/60 via-transparent to-[hsl(var(--sm-black))]/30" />
+        <div className="absolute inset-0 bg-[hsl(var(--sm-green-dark))]/72" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--sm-black))]/45 via-transparent to-[hsl(var(--sm-black))]/15" />
       </div>
 
       {/* Subtle pattern overlay */}
