@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# S. M. Trade International
 
-## Project info
+> Corporate B2B website for promotional products, corporate gifts & industrial supplies.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Live:** [smtradeint.com](https://smtradeint.com)  
+**Server:** Hostinger KVM VPS — 187.77.144.38  
+**Stack:** React 18 + Express.js + PostgreSQL
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Quick Start
 
-**Use Lovable**
+```bash
+# Clone & install
+git clone https://github.com/digiwebdex/sm-trade-international-bc54e3bd.git
+cd sm-trade-international-bc54e3bd
+npm install
+cd backend && npm install && cd ..
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Start development
+npm run dev          # Frontend → http://localhost:5173
+cd backend && npm run dev  # Backend → http://localhost:4000
 ```
 
-**Edit a file directly in GitHub**
+## Deploy to Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+ssh root@187.77.144.38
+cd /var/www/sm-trade-international && bash deploy.sh
+```
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Documentation
 
-## What technologies are used for this project?
+| Document | Description |
+|----------|-------------|
+| [Developer Guide](docs/DEVELOPER_GUIDE.md) | Complete A-to-Z development documentation |
+| [Architecture](docs/ARCHITECTURE.md) | System design & data flow diagrams |
+| [API Reference](docs/API_REFERENCE.md) | All API endpoints with examples |
+| [Database Schema](docs/DATABASE_SCHEMA.md) | Tables, relationships & indexes |
+| [Deployment Commands](docs/DEPLOYMENT_COMMANDS.md) | All server management commands |
+| [Deployment History](docs/DEPLOYMENT_HISTORY.md) | Chronological deployment log |
+| [Changelog](docs/CHANGELOG.md) | Feature & change history |
+| [Migration Report](docs/MIGRATION_REPORT.md) | Supabase → VPS migration details |
+| [Security](docs/SECURITY.md) | Auth, API security & infrastructure |
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Tech Stack
 
-## How can I deploy this project?
+**Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, React Query, Three.js  
+**Backend:** Node.js 20, Express.js, PostgreSQL 16, JWT, Multer  
+**Infrastructure:** Nginx, PM2, Certbot SSL, Git-based deployment
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## Project Structure
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+├── src/                  # React frontend
+│   ├── components/       # UI components (public + admin)
+│   ├── contexts/         # Auth, Language, QuoteBasket
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # API client & utilities
+│   └── pages/            # Route pages (public + admin)
+├── backend/              # Express.js API server
+├── database/             # SQL schema & migrations
+├── docs/                 # Project documentation
+├── nginx/                # Nginx config
+├── migration/            # Migration scripts
+└── deploy.sh             # Production deploy script
+```
