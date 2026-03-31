@@ -1,12 +1,10 @@
-import { useState, useEffect, useRef, useCallback, TouchEvent } from 'react';
+import { useState, useEffect, useRef, TouchEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/apiClient';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import OptimizedImage from '@/components/OptimizedImage';
-
-const SPEED = 3500;
 
 const HeroSection = () => {
   const { lang } = useLanguage();
@@ -16,8 +14,7 @@ const HeroSection = () => {
   const animRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const touchStartX = useRef(0);
-  const touchDelta = useRef(0);
-  const speedRef = useRef(0.015); // degrees per ms — continuous rotation speed
+  const speedRef = useRef(0.012);
 
   const { data: dbProducts } = useQuery({
     queryKey: ['hero-products'],
@@ -43,10 +40,24 @@ const HeroSection = () => {
 
   const len = items.length;
 
-  // Continuous smooth rotation via requestAnimationFrame
+  // Find the front-most item for the text panel
+  const getFrontItem = () => {
+    if (len === 0) return null;
+    let bestIdx = 0;
+    let bestDepth = -Infinity;
+    for (let i = 0; i < len; i++) {
+      const itemAngle = (360 / len) * i + angle;
+      const rad = (itemAngle * Math.PI) / 180;
+      const z = Math.cos(rad);
+      if (z > bestDepth) { bestDepth = z; bestIdx = i; }
+    }
+    return items[bestIdx];
+  };
+
+  const frontItem = getFrontItem();
+
   useEffect(() => {
     if (paused || len < 2) return;
-
     const animate = (time: number) => {
       if (lastTimeRef.current) {
         const delta = time - lastTimeRef.current;
@@ -55,7 +66,6 @@ const HeroSection = () => {
       lastTimeRef.current = time;
       animRef.current = requestAnimationFrame(animate);
     };
-
     animRef.current = requestAnimationFrame(animate);
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -63,10 +73,9 @@ const HeroSection = () => {
     };
   }, [paused, len]);
 
-  const onTouchStart = (e: TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchDelta.current = 0; setPaused(true); };
+  const onTouchStart = (e: TouchEvent) => { touchStartX.current = e.touches[0].clientX; setPaused(true); };
   const onTouchMove = (e: TouchEvent) => {
     const delta = e.touches[0].clientX - touchStartX.current;
-    touchDelta.current = delta;
     setAngle(prev => prev - delta * 0.15);
     touchStartX.current = e.touches[0].clientX;
   };
@@ -81,122 +90,188 @@ const HeroSection = () => {
     );
   }
 
-  const radius = 300;
-  const cardW = 160;
-  const cardH = 200;
+  const radius = 240;
+  const cardW = 140;
+  const cardH = 175;
 
   return (
     <section id="home" className="relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f1d35 40%, #142240 60%, #0a1628 100%)' }}>
 
-      {/* Ambient glow */}
+      {/* Decorative elements */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(212,175,55,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.5) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
+        }} />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full blur-[180px]"
-          style={{ background: 'radial-gradient(circle, rgba(100,140,200,0.06), transparent 60%)' }} />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[400px] rounded-full blur-[200px]"
+          style={{ background: 'radial-gradient(circle, rgba(100,140,200,0.05), transparent 60%)' }} />
       </div>
+      {/* Top & bottom gold lines */}
+      <div className="absolute top-0 left-0 w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.15), transparent)' }} />
+      <div className="absolute bottom-0 left-0 w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.1), transparent)' }} />
 
-      <div
-        className="relative z-10 flex flex-col items-center justify-center px-4 py-10 md:py-14 lg:py-16 touch-pan-y"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        {/* Circular orbit container */}
-        <div
-          className="relative w-full max-w-3xl mx-auto h-[320px] sm:h-[380px] md:h-[430px] flex items-center justify-center"
-          style={{ perspective: '1000px' }}
-        >
-          {items.map((item, i) => {
-            const itemAngle = (360 / len) * i + angle;
-            const rad = (itemAngle * Math.PI) / 180;
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 lg:py-16">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
 
-            // Circular path: X from sin, Z from cos
-            const x = Math.sin(rad) * radius;
-            const z = Math.cos(rad) * radius;
+          {/* LEFT — Text content */}
+          <div className="flex-1 text-center md:text-left order-2 md:order-1">
+            {/* Subtitle */}
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
+              <div className="w-6 h-px" style={{ background: 'rgba(212,175,55,0.5)' }} />
+              <span className="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-medium"
+                style={{ color: 'rgba(212,175,55,0.8)' }}>
+                {lang === 'en' ? '1st Class Govt. Contractor' : '১ম শ্রেণীর সরকারি ঠিকাদার'}
+              </span>
+              <div className="w-6 h-px" style={{ background: 'rgba(212,175,55,0.5)' }} />
+            </div>
 
-            // Normalize z: -radius to +radius → 0 to 1
-            const depthNorm = (z + radius) / (2 * radius); // 0=back, 1=front
-            const scale = 0.5 + depthNorm * 0.5;
-            const opacity = 0.25 + depthNorm * 0.75;
-            const zIndex = Math.round(depthNorm * 100);
-            const blur = depthNorm < 0.3 ? `blur(${Math.round((0.3 - depthNorm) * 6)}px)` : 'none';
+            {/* Main heading */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4"
+              style={{ color: 'rgba(255,255,255,0.95)', fontFamily: "'Cormorant Garamond', serif" }}>
+              {lang === 'en' ? (
+                <>Premium Corporate<br className="hidden sm:block" /> Gifts & Supplies</>
+              ) : (
+                <>প্রিমিয়াম কর্পোরেট<br className="hidden sm:block" /> গিফ্ট ও সাপ্লাইজ</>
+              )}
+            </h1>
 
-            const isFront = depthNorm > 0.9;
+            {/* Description */}
+            <p className="text-sm sm:text-base leading-relaxed mb-6 max-w-md mx-auto md:mx-0"
+              style={{ color: 'rgba(255,255,255,0.55)' }}>
+              {lang === 'en'
+                ? 'Customized promotional products for government and private organizations across Bangladesh.'
+                : 'বাংলাদেশের সরকারি ও বেসরকারি প্রতিষ্ঠানের জন্য কাস্টমাইজড প্রমোশনাল পণ্য।'}
+            </p>
 
-            return (
-              <div
-                key={item.id}
-                className="absolute cursor-pointer"
-                style={{
-                  width: cardW,
-                  height: cardH,
-                  left: '50%',
-                  top: '50%',
-                  marginLeft: -cardW / 2,
-                  marginTop: -cardH / 2,
-                  transform: `translateX(${x}px) scale(${scale})`,
-                  opacity,
-                  zIndex,
-                  filter: blur,
-                  // No CSS transition — driven by rAF for smooth continuous motion
-                }}
-                onClick={() => {
-                  if (isFront) navigate(`/product/${item.id}`);
-                }}
-              >
-                <div
-                  className="w-full h-full rounded-2xl overflow-hidden"
-                  style={{
-                    background: '#ffffff',
-                    boxShadow: isFront
-                      ? '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.15)'
-                      : '0 8px 24px -6px rgba(0,0,0,0.3)',
-                  }}
-                >
-                  {/* Image */}
-                  <div className={`w-full ${isFront ? 'h-[calc(100%-44px)]' : 'h-full'} p-3 flex items-center justify-center`}>
-                    <OptimizedImage
-                      src={item.img}
-                      alt={item.label}
-                      className="w-full h-full object-contain"
-                      blurPlaceholder={false}
-                    />
-                  </div>
-
-                  {/* Label — front card only */}
-                  {isFront && (
-                    <div className="h-[44px] flex items-center justify-center px-3"
-                      style={{ borderTop: '1px solid #eee' }}>
-                      <span className="text-xs font-semibold truncate text-center" style={{ color: '#333' }}>
-                        {item.label}
-                      </span>
-                    </div>
-                  )}
-                </div>
+            {/* Current product badge */}
+            {frontItem && (
+              <div className="mb-5">
+                <span className="text-[10px] tracking-widest uppercase mb-1 block"
+                  style={{ color: 'rgba(212,175,55,0.5)' }}>
+                  {lang === 'en' ? 'Featured' : 'ফিচার্ড'}
+                </span>
+                <span className="text-base sm:text-lg font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  {frontItem.label}
+                </span>
               </div>
-            );
-          })}
-        </div>
+            )}
 
-        {/* Controls */}
-        <div className="flex items-center gap-5 mt-2">
-          <button onClick={() => setAngle(a => a - 360 / len)} aria-label="Previous"
-            className="w-10 h-10 rounded-full border border-white/15 bg-white/5 backdrop-blur flex items-center justify-center text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all duration-300 active:scale-90">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+            {/* CTA buttons */}
+            <div className="flex items-center gap-3 justify-center md:justify-start">
+              <button
+                onClick={() => navigate('/catalog')}
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #d4af37, #b8962e)',
+                  color: '#0a1628',
+                }}>
+                {lang === 'en' ? 'View Catalog' : 'ক্যাটালগ দেখুন'}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </button>
+              <button
+                onClick={() => {
+                  const el = document.getElementById('quote');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
+                style={{
+                  border: '1px solid rgba(212,175,55,0.3)',
+                  color: 'rgba(212,175,55,0.85)',
+                  background: 'rgba(212,175,55,0.05)',
+                }}>
+                {lang === 'en' ? 'Get Quote' : 'কোটেশন নিন'}
+              </button>
+            </div>
+          </div>
 
-          <button
-            onClick={() => setPaused(p => !p)}
-            className="px-4 py-1.5 rounded-full border border-white/15 bg-white/5 text-white/50 hover:text-white text-xs tracking-wider uppercase transition-all duration-300">
-            {paused ? '▶ Play' : '⏸ Pause'}
-          </button>
+          {/* RIGHT — Circular carousel */}
+          <div
+            className="flex-1 order-1 md:order-2 relative w-full max-w-lg h-[300px] sm:h-[350px] md:h-[400px] flex items-center justify-center touch-pan-y"
+            style={{ perspective: '900px' }}
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {items.map((item, i) => {
+              const itemAngle = (360 / len) * i + angle;
+              const rad = (itemAngle * Math.PI) / 180;
+              const x = Math.sin(rad) * radius;
+              const z = Math.cos(rad) * radius;
+              const depthNorm = (z + radius) / (2 * radius);
+              const scale = 0.45 + depthNorm * 0.55;
+              const opacity = 0.2 + depthNorm * 0.8;
+              const zIndex = Math.round(depthNorm * 100);
+              const blurVal = depthNorm < 0.3 ? `blur(${Math.round((0.3 - depthNorm) * 5)}px)` : 'none';
+              const isFront = depthNorm > 0.92;
 
-          <button onClick={() => setAngle(a => a + 360 / len)} aria-label="Next"
-            className="w-10 h-10 rounded-full border border-white/15 bg-white/5 backdrop-blur flex items-center justify-center text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all duration-300 active:scale-90">
-            <ChevronRight className="w-5 h-5" />
-          </button>
+              return (
+                <div
+                  key={item.id}
+                  className="absolute cursor-pointer"
+                  style={{
+                    width: cardW,
+                    height: cardH,
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: -cardW / 2,
+                    marginTop: -cardH / 2,
+                    transform: `translateX(${x}px) scale(${scale})`,
+                    opacity,
+                    zIndex,
+                    filter: blurVal,
+                  }}
+                  onClick={() => { if (isFront) navigate(`/product/${item.id}`); }}
+                >
+                  <div
+                    className="w-full h-full rounded-xl overflow-hidden"
+                    style={{
+                      background: '#fff',
+                      boxShadow: isFront
+                        ? '0 20px 40px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)'
+                        : '0 6px 20px -4px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <div className="w-full h-full p-3 flex items-center justify-center">
+                      <OptimizedImage
+                        src={item.img}
+                        alt={item.label}
+                        className="w-full h-full object-contain"
+                        blurPlaceholder={false}
+                      />
+                    </div>
+                    {/* Gold accent on front */}
+                    {isFront && (
+                      <div className="absolute bottom-0 left-0 w-full h-[2px]"
+                        style={{ background: 'linear-gradient(90deg, transparent, #d4af37, transparent)' }} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Controls under carousel */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-4 z-[200]">
+              <button onClick={() => setAngle(a => a - 360 / len)} aria-label="Previous"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90"
+                style={{ border: '1px solid rgba(212,175,55,0.2)', background: 'rgba(212,175,55,0.05)', color: 'rgba(212,175,55,0.6)' }}>
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button onClick={() => setPaused(p => !p)}
+                className="px-3 py-1 rounded-full text-[10px] tracking-wider uppercase transition-all duration-300"
+                style={{ border: '1px solid rgba(212,175,55,0.2)', background: 'rgba(212,175,55,0.05)', color: 'rgba(212,175,55,0.6)' }}>
+                {paused ? '▶' : '⏸'}
+              </button>
+              <button onClick={() => setAngle(a => a + 360 / len)} aria-label="Next"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90"
+                style={{ border: '1px solid rgba(212,175,55,0.2)', background: 'rgba(212,175,55,0.05)', color: 'rgba(212,175,55,0.6)' }}>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
