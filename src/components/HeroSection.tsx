@@ -73,13 +73,11 @@ const HeroSection = () => {
   const onTouchMove = (e: TouchEvent) => { touchDelta.current = e.touches[0].clientX - touchStartX.current; };
   const onTouchEnd = () => { if (touchDelta.current > 50) prev(); else if (touchDelta.current < -50) next(); setPaused(false); };
 
-  // Build visible card positions: far-left, left, center, right, far-right
-  const positions = [
-    { offset: -2, x: '-110%', scale: 0.5, rotateY: 45, z: -100, opacity: 0.3, blur: 2 },
-    { offset: -1, x: '-60%',  scale: 0.72, rotateY: 30, z: -50, opacity: 0.65, blur: 0 },
-    { offset: 0,  x: '-50%',  scale: 1,    rotateY: 0,  z: 0,   opacity: 1, blur: 0 },
-    { offset: 1,  x: '-40%',  scale: 0.72, rotateY: -30, z: -50, opacity: 0.65, blur: 0 },
-    { offset: 2,  x: '10%',   scale: 0.5,  rotateY: -45, z: -100, opacity: 0.3, blur: 2 },
+  // Card configs: offset from center, pixel translateX, scale, rotateY, opacity
+  const cardConfigs = [
+    { offset: -1, tx: -170, scale: 0.75, ry: 35, opacity: 0.7, z: 2 },
+    { offset: 0,  tx: 0,    scale: 1,    ry: 0,  opacity: 1,   z: 10 },
+    { offset: 1,  tx: 170,  scale: 0.75, ry: -35, opacity: 0.7, z: 2 },
   ];
 
   return (
@@ -129,7 +127,7 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right — Premium Coverflow Carousel */}
+          {/* Right — 3D Coverflow Carousel */}
           {len > 0 && (
             <div
               className="relative flex flex-col items-center justify-center touch-pan-y"
@@ -140,87 +138,100 @@ const HeroSection = () => {
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
             >
-              {/* Soft ambient glow behind cards */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-accent/8 blur-[80px] pointer-events-none" />
+              {/* Ambient glow */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full bg-accent/8 blur-[80px] pointer-events-none" />
 
-              {/* Cards container */}
-              <div className="relative w-full max-w-[480px] h-[320px] sm:h-[360px] mx-auto"
-                style={{ perspective: '1200px' }}>
-
-                {positions.map(pos => {
-                  if (len < 3 && Math.abs(pos.offset) > 1) return null;
-                  if (len < 2 && pos.offset !== 0) return null;
-                  const idx = safeIdx(current + pos.offset);
+              {/* Cards area */}
+              <div
+                className="relative w-full h-[340px] sm:h-[380px] mx-auto mb-4"
+                style={{ perspective: '1000px' }}
+              >
+                {cardConfigs.map(cfg => {
+                  if (len < 2 && cfg.offset !== 0) return null;
+                  const idx = safeIdx(current + cfg.offset);
                   const item = items[idx];
                   if (!item) return null;
-                  const isCenter = pos.offset === 0;
+                  const isCenter = cfg.offset === 0;
 
                   return (
                     <div
-                      key={`${pos.offset}-${idx}`}
-                      className="absolute top-1/2"
+                      key={`pos-${cfg.offset}`}
                       style={{
+                        position: 'absolute',
+                        width: isCenter ? 230 : 170,
+                        height: isCenter ? 300 : 225,
                         left: '50%',
-                        width: isCenter ? '240px' : Math.abs(pos.offset) === 1 ? '180px' : '130px',
-                        height: isCenter ? '300px' : Math.abs(pos.offset) === 1 ? '230px' : '170px',
-                        transform: `translateX(${pos.x}) translateY(-50%) translateZ(${pos.z}px) rotateY(${pos.rotateY}deg) scale(${pos.scale})`,
-                        opacity: pos.opacity,
-                        zIndex: 10 - Math.abs(pos.offset) * 3,
-                        transition: 'all 0.65s cubic-bezier(0.4, 0, 0.2, 1)',
-                        filter: pos.blur ? `blur(${pos.blur}px)` : 'none',
-                        cursor: isCenter ? 'pointer' : 'pointer',
+                        top: '50%',
+                        marginLeft: isCenter ? -115 : -85,
+                        marginTop: isCenter ? -150 : -112,
+                        transform: `translateX(${cfg.tx}px) scale(${cfg.scale}) rotateY(${cfg.ry}deg)`,
+                        opacity: cfg.opacity,
+                        zIndex: cfg.z,
+                        transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                        cursor: 'pointer',
+                        transformOrigin: cfg.offset < 0 ? 'right center' : cfg.offset > 0 ? 'left center' : 'center center',
                       }}
                       onClick={() => {
                         if (isCenter) navigate(`/product/${item.id}`);
-                        else if (pos.offset < 0) prev();
+                        else if (cfg.offset < 0) prev();
                         else next();
                       }}
                     >
                       <div
-                        className="w-full h-full rounded-2xl overflow-hidden relative"
+                        className="w-full h-full rounded-2xl overflow-hidden relative group"
                         style={{
-                          background: 'linear-gradient(160deg, #ffffff 0%, #f5f3ef 50%, #ede9e3 100%)',
+                          background: 'linear-gradient(160deg, #ffffff 0%, #f7f5f0 60%, #efe9df 100%)',
                           boxShadow: isCenter
-                            ? '0 30px 80px -20px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.15), inset 0 1px 0 rgba(255,255,255,0.9)'
-                            : '0 15px 40px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1)',
+                            ? '0 30px 70px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.8)'
+                            : '0 15px 35px -10px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08)',
                         }}
                       >
-                        {/* Gold accent line at top for center card */}
+                        {/* Top gold line for center */}
                         {isCenter && (
-                          <div className="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+                          <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                        )}
+
+                        {/* Corner accents for center */}
+                        {isCenter && (
+                          <>
+                            <div className="absolute top-3 left-3 w-4 h-4 border-t-[1.5px] border-l-[1.5px] border-accent/25 rounded-tl-lg" />
+                            <div className="absolute top-3 right-3 w-4 h-4 border-t-[1.5px] border-r-[1.5px] border-accent/25 rounded-tr-lg" />
+                            <div className="absolute bottom-10 left-3 w-4 h-4 border-b-[1.5px] border-l-[1.5px] border-accent/25 rounded-bl-lg" />
+                            <div className="absolute bottom-10 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] border-accent/25 rounded-br-lg" />
+                          </>
                         )}
 
                         {/* Product image */}
-                        <div className={`w-full ${isCenter ? 'h-[calc(100%-44px)]' : 'h-full'} p-4 flex items-center justify-center`}>
+                        <div className={`w-full ${isCenter ? 'h-[calc(100%-42px)]' : 'h-full'} p-4 flex items-center justify-center`}>
                           <OptimizedImage
                             src={item.img}
                             alt={item.label}
                             className="w-full h-full object-contain drop-shadow-lg"
-                            sizes={isCenter ? '240px' : '180px'}
+                            sizes={isCenter ? '230px' : '170px'}
                             blurPlaceholder={false}
                           />
                         </div>
 
-                        {/* Label — only on center card */}
+                        {/* Label bar — center only */}
                         {isCenter && (
-                          <div className="absolute bottom-0 inset-x-0 h-11 flex items-center justify-center bg-gradient-to-t from-white/80 to-white/20 backdrop-blur-sm">
-                            <span className="text-xs font-bold text-foreground/80 truncate px-3 tracking-wide uppercase"
+                          <div className="absolute bottom-0 inset-x-0 h-[42px] flex items-center justify-center bg-gradient-to-t from-white/90 to-white/40 backdrop-blur-sm border-t border-accent/10">
+                            <span className="text-[11px] font-bold text-foreground/70 truncate px-4 tracking-wider uppercase"
                               style={{ fontFamily: 'DM Sans, sans-serif' }}>
                               {item.label}
                             </span>
                           </div>
                         )}
 
-                        {/* Subtle shine overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none rounded-2xl" />
+                        {/* Shine */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent pointer-events-none rounded-2xl" />
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Controls row */}
-              <div className="flex items-center gap-4 mt-2">
+              {/* Controls */}
+              <div className="flex items-center gap-4">
                 <button onClick={prev}
                   className="w-10 h-10 rounded-full border border-white/15 bg-white/5 backdrop-blur-xl flex items-center justify-center text-white/60 hover:text-white hover:border-accent/40 hover:bg-accent/10 transition-all duration-300 hover:scale-110">
                   <ChevronLeft className="w-5 h-5" />
