@@ -207,19 +207,19 @@ const HeroSection = () => {
 
       {/* Product Slider - Bottom overlay */}
       {products.length > 0 && (
-        <div className="absolute bottom-16 left-0 right-0 z-20">
+        <div className="absolute bottom-28 left-0 right-0 z-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex gap-4 overflow-hidden">
-              {products.slice(0, 5).map((product, i) => {
-                const isActive = i === productIdx % Math.min(5, products.length);
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {products.slice(0, 6).map((product, i) => {
+                const isActive = i === productIdx % Math.min(6, products.length);
                 return (
                   <div
                     key={product.id}
                     onClick={() => navigate(`/product/${productSlug(product)}`)}
-                    className={`group flex items-center gap-3 rounded-xl p-2.5 cursor-pointer transition-all duration-500 shrink-0 w-[200px] sm:w-[220px] ${
+                    className={`group flex items-center gap-3 rounded-xl p-2.5 cursor-pointer transition-all duration-500 shrink-0 w-[200px] ${
                       isActive
-                        ? 'bg-white/20 backdrop-blur-md border border-white/25 scale-105'
-                        : 'bg-white/8 backdrop-blur-sm border border-white/10 hover:bg-white/15'
+                        ? 'bg-white/20 backdrop-blur-md border border-white/30 scale-[1.03]'
+                        : 'bg-white/10 backdrop-blur-sm border border-white/10 hover:bg-white/15'
                     }`}
                   >
                     <div className="w-14 h-14 rounded-lg bg-white/10 overflow-hidden shrink-0">
