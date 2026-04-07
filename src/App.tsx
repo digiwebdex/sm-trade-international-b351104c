@@ -119,6 +119,8 @@ const App = () => (
               }>
                 <Route index element={<Suspense fallback={<AdminFallback />}><AdminDashboard /></Suspense>} />
                 <Route path="products" element={<Suspense fallback={<AdminFallback />}><AdminProducts /></Suspense>} />
+                <Route path="products/new" element={<Suspense fallback={<AdminFallback />}><AdminProductEditor /></Suspense>} />
+                <Route path="products/edit/:id" element={<Suspense fallback={<AdminFallback />}><AdminProductEditor /></Suspense>} />
                 <Route path="categories" element={<Suspense fallback={<AdminFallback />}><AdminCategories /></Suspense>} />
                 <Route path="gallery" element={<Suspense fallback={<AdminFallback />}><AdminGallery /></Suspense>} />
                 <Route path="clients" element={<Suspense fallback={<AdminFallback />}><AdminClients /></Suspense>} />
