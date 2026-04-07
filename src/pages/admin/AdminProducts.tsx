@@ -9,13 +9,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Search, ChevronLeft, ChevronRight, X, CheckSquare, Square, PackagePlus, Star } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Search, ChevronLeft, ChevronRight, X, CheckSquare, Square, PackagePlus, Star, Package, Filter, MoreVertical, Eye, EyeOff, Copy, ToggleLeft } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import BulkUploadZone, { type FileItem } from '@/components/admin/BulkUploadZone';
 import ColorVariantManager from '@/components/admin/ColorVariantManager';
 import ProductImageManager from '@/components/admin/ProductImageManager';
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const PAGE_SIZE = 12;
 
@@ -91,7 +95,11 @@ const AdminProducts = () => {
 
   const filtered = useMemo(() => {
     return products.filter(p => {
-      const matchSearch = !search || p.name_en.toLowerCase().includes(search.toLowerCase());
+      const q = search.toLowerCase();
+      const matchSearch = !search || 
+        p.name_en.toLowerCase().includes(q) || 
+        ((p as any).product_code && (p as any).product_code.toLowerCase().includes(q)) ||
+        ((p as any).categories?.name_en || '').toLowerCase().includes(q);
       const matchCat = filterCategory === 'all' || p.category_id === filterCategory;
       const matchStatus = filterStatus === 'all' || (filterStatus === 'active' ? p.is_active : !p.is_active);
       return matchSearch && matchCat && matchStatus;
@@ -100,6 +108,9 @@ const AdminProducts = () => {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const activeCount = products.filter(p => p.is_active).length;
+  const inactiveCount = products.filter(p => !p.is_active).length;
 
   const handleImageUpload = async (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
@@ -157,7 +168,6 @@ const AdminProducts = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast({ title: editId ? 'Product updated' : 'Product created successfully!' });
       if (!editId && newId) {
-        // Switch to edit mode to allow adding additional images
         setEditId(newId);
       } else {
         closeDialog();
@@ -168,7 +178,6 @@ const AdminProducts = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Clean up any variant data
       await supabase.from('product_variants').delete().eq('product_id', id);
       await supabase.from('product_images').delete().eq('product_id', id);
       const { error } = await supabase.from('products').delete().eq('id', id);
@@ -203,7 +212,24 @@ const AdminProducts = () => {
       const { error } = await supabase.from('products').update({ is_active }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-products'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast({ title: 'Status updated' });
+    },
+    onError: (err: Error) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const bulkToggleStatusMutation = useMutation({
+    mutationFn: async ({ ids, is_active }: { ids: string[]; is_active: boolean }) => {
+      for (const id of ids) {
+        await supabase.from('products').update({ is_active }).eq('id', id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast({ title: `${selected.size} products updated` });
+      setSelected(new Set());
+    },
     onError: (err: Error) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
   });
 
@@ -288,24 +314,23 @@ const AdminProducts = () => {
   const resetFilters = () => { setSearch(''); setFilterCategory('all'); setFilterStatus('all'); setPage(1); };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-muted-foreground text-sm">
-          {filtered.length} product{filtered.length !== 1 ? 's' : ''}
-          {filtered.length !== products.length && ` (filtered from ${products.length})`}
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          {selected.size > 0 && (
-            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
-              <Trash2 className="h-4 w-4 mr-1" /> Delete {selected.size}
-            </Button>
-          )}
-
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Package className="h-6 w-6 text-primary" />
+            Products
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your product catalog
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
           <Dialog open={bulkOpen} onOpenChange={v => { if (!v) closeBulk(); else setBulkOpen(true); }}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <PackagePlus className="h-4 w-4 mr-2" /> Bulk Add
+              <Button variant="outline" size="sm" className="gap-2">
+                <PackagePlus className="h-4 w-4" /> Bulk Add
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -327,8 +352,7 @@ const AdminProducts = () => {
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={closeBulk} disabled={bulkImporting}>Cancel</Button>
                   <Button onClick={handleBulkImport}
-                    disabled={bulkImporting || bulkFiles.filter(f => f.status === 'pending').length === 0}
-                    className="bg-sm-red hover:bg-[hsl(var(--sm-red-dark))] text-white">
+                    disabled={bulkImporting || bulkFiles.filter(f => f.status === 'pending').length === 0}>
                     {bulkImporting ? 'Importing...' : `Add ${bulkFiles.filter(f => f.status === 'pending').length} Products`}
                   </Button>
                 </div>
@@ -338,8 +362,8 @@ const AdminProducts = () => {
 
           <Dialog open={dialogOpen} onOpenChange={v => { if (!v) closeDialog(); else setDialogOpen(true); }}>
             <DialogTrigger asChild>
-              <Button className="bg-sm-red hover:bg-[hsl(var(--sm-red-dark))] text-white">
-                <Plus className="h-4 w-4 mr-2" /> Add Product
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" /> Add Product
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -425,27 +449,26 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
-                {/* Product Image — simple upload for new, full manager for edit */}
+                {/* Product Image */}
                 {editId ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Product Images</label>
                       {form.image_url && (
                         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Star className="h-3 w-3 text-[hsl(var(--sm-gold))] fill-[hsl(var(--sm-gold))]" /> Featured image set
+                          <Star className="h-3 w-3 text-amber-500 fill-amber-500" /> Featured image set
                         </span>
                       )}
                     </div>
-                    {/* Featured image preview */}
                     {form.image_url && (
                       <div className="relative">
-                        <img src={form.image_url} alt="Featured" className="w-full h-32 object-contain rounded-lg border bg-white p-2" />
-                        <div className="absolute top-2 left-2 bg-[hsl(var(--sm-gold))]/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <img src={form.image_url} alt="Featured" className="w-full h-32 object-contain rounded-lg border bg-muted/30 p-2" />
+                        <div className="absolute top-2 left-2 bg-amber-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Star className="h-3 w-3 fill-current" /> Featured
                         </div>
                         <Button type="button" size="sm" variant="secondary" className="absolute bottom-2 right-2"
                           onClick={() => setForm(f => ({ ...f, image_url: '' }))}>
-                          <X className="h-3 w-3 mr-1" /> Remove Featured
+                          <X className="h-3 w-3 mr-1" /> Remove
                         </Button>
                       </div>
                     )}
@@ -466,7 +489,7 @@ const AdminProducts = () => {
                       }} />
                     {form.image_url ? (
                       <div className="relative mt-2">
-                        <img src={form.image_url} alt="Preview" className="w-full h-40 object-contain rounded-lg border bg-white p-2" />
+                        <img src={form.image_url} alt="Preview" className="w-full h-40 object-contain rounded-lg border bg-muted/30 p-2" />
                         <div className="absolute bottom-2 right-2 flex gap-1.5">
                           <Button type="button" size="sm" variant="secondary" onClick={() => fileRef.current?.click()}>Change</Button>
                           <Button type="button" size="sm" variant="secondary" onClick={() => setForm(f => ({ ...f, image_url: '' }))}>
@@ -496,7 +519,7 @@ const AdminProducts = () => {
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
-                  <Button type="submit" className="bg-sm-red hover:bg-[hsl(var(--sm-red-dark))] text-white" disabled={saveMutation.isPending}>
+                  <Button type="submit" disabled={saveMutation.isPending}>
                     {saveMutation.isPending ? 'Saving...' : editId ? 'Update Product' : 'Save Product'}
                   </Button>
                 </div>
@@ -506,117 +529,301 @@ const AdminProducts = () => {
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search products…" value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
+      {/* Stats Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-background border border-border rounded-xl p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Package className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{products.length}</p>
+            <p className="text-xs text-muted-foreground">Total Products</p>
+          </div>
         </div>
-        <Select value={filterCategory} onValueChange={v => { setFilterCategory(v); setPage(1); }}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="All Categories" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name_en}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={v => { setFilterStatus(v as any); setPage(1); }}>
-          <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-        {(search || filterCategory !== 'all' || filterStatus !== 'all') && (
-          <Button variant="ghost" size="sm" onClick={resetFilters}>
-            <X className="h-4 w-4 mr-1" /> Clear
-          </Button>
-        )}
+        <div className="bg-background border border-border rounded-xl p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+            <Eye className="h-5 w-5 text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+            <p className="text-xs text-muted-foreground">Active</p>
+          </div>
+        </div>
+        <div className="bg-background border border-border rounded-xl p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+            <EyeOff className="h-5 w-5 text-amber-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{inactiveCount}</p>
+            <p className="text-xs text-muted-foreground">Inactive</p>
+          </div>
+        </div>
+        <div className="bg-background border border-border rounded-xl p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            <Filter className="h-5 w-5 text-blue-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{categories.length}</p>
+            <p className="text-xs text-muted-foreground">Categories</p>
+          </div>
+        </div>
       </div>
 
-      {/* Select all bar */}
-      {paginated.length > 0 && (
-        <div className="flex items-center gap-3 text-sm">
-          <button onClick={toggleSelectAll}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-            {selected.size === paginated.length && paginated.length > 0
-              ? <CheckSquare className="h-4 w-4" />
-              : <Square className="h-4 w-4" />}
-            {selected.size === paginated.length && paginated.length > 0 ? 'Deselect all' : 'Select all on page'}
-          </button>
-          {selected.size > 0 && <span className="text-muted-foreground">· {selected.size} selected</span>}
+      {/* Search & Filter Bar */}
+      <div className="bg-background border border-border rounded-xl p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search by name, code, or category…" 
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }} 
+              className="pl-10 bg-muted/30 border-border/50 focus:bg-background"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Select value={filterCategory} onValueChange={v => { setFilterCategory(v); setPage(1); }}>
+              <SelectTrigger className="w-[160px] bg-muted/30 border-border/50">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name_en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={v => { setFilterStatus(v as any); setPage(1); }}>
+              <SelectTrigger className="w-[130px] bg-muted/30 border-border/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            {(search || filterCategory !== 'all' || filterStatus !== 'all') && (
+              <Button variant="ghost" size="icon" onClick={resetFilters} className="shrink-0">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Grid */}
+        {/* Select all & bulk actions bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {paginated.length > 0 && (
+              <button 
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Checkbox
+                  checked={selected.size === paginated.length && paginated.length > 0}
+                  onCheckedChange={() => toggleSelectAll()}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span>{selected.size === paginated.length && paginated.length > 0 ? 'Deselect all' : 'Select all'}</span>
+              </button>
+            )}
+            <span className="text-sm text-muted-foreground">
+              {filtered.length} product{filtered.length !== 1 ? 's' : ''}
+              {filtered.length !== products.length && ` (filtered from ${products.length})`}
+            </span>
+          </div>
+
+          {selected.size > 0 && (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {selected.size} selected
+              </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <ToggleLeft className="h-3.5 w-3.5" /> Bulk Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => bulkToggleStatusMutation.mutate({ ids: Array.from(selected), is_active: true })}>
+                    <Eye className="h-4 w-4 mr-2" /> Activate All
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkToggleStatusMutation.mutate({ ids: Array.from(selected), is_active: false })}>
+                    <EyeOff className="h-4 w-4 mr-2" /> Deactivate All
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setBulkDeleteOpen(true)}>
+                    <Trash2 className="h-4 w-4 mr-2" /> Delete Selected
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Product Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => <Card key={i} className="animate-pulse"><CardContent className="h-48" /></Card>)}
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-background border border-border rounded-xl overflow-hidden">
+              <Skeleton className="aspect-[4/3] w-full" />
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : paginated.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            {products.length === 0 ? 'No products yet. Add your first product.' : 'No products match your filters.'}
-          </CardContent>
-        </Card>
+        <div className="bg-background border border-border rounded-xl p-16 text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Package className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">
+            {products.length === 0 ? 'No products yet' : 'No results found'}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {products.length === 0 ? 'Add your first product to get started.' : 'Try adjusting your search or filters.'}
+          </p>
+          {products.length === 0 && (
+            <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Add Product
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginated.map(prod => {
             const isSelected = selected.has(prod.id);
             const price = Number((prod as any).unit_price) || 0;
+            const categoryName = (prod as any).categories?.name_en ?? 'Uncategorized';
+            const productCode = (prod as any).product_code;
+
             return (
-              <Card key={prod.id}
-                className={cn('overflow-hidden hover:shadow-md transition-shadow cursor-pointer', isSelected && 'ring-2 ring-primary')}
-                onClick={() => toggleSelect(prod.id)}>
-                <div className="aspect-video bg-muted relative">
+              <div
+                key={prod.id}
+                className={cn(
+                  'group bg-background border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/20',
+                  isSelected ? 'ring-2 ring-primary border-primary/30 shadow-md' : 'border-border'
+                )}
+              >
+                {/* Image Area */}
+                <div className="relative aspect-[4/3] bg-muted/30 overflow-hidden">
                   {prod.image_url ? (
-                    <img src={prod.image_url} alt={prod.name_en} className="w-full h-full object-cover" loading="lazy" />
+                    <img 
+                      src={prod.image_url} 
+                      alt={prod.name_en} 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                      loading="lazy" 
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+                      <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
                     </div>
                   )}
-                  <div className="absolute top-2 right-2 flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                    <Switch checked={prod.is_active}
-                      onCheckedChange={v => toggleStatusMutation.mutate({ id: prod.id, is_active: v })}
-                      className="scale-75" />
-                    <Badge variant={prod.is_active ? 'default' : 'secondary'} className="text-xs py-0">
-                      {prod.is_active ? 'Active' : 'Off'}
+
+                  {/* Top-left: Checkbox */}
+                  <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelect(prod.id)}
+                      className={cn(
+                        "h-5 w-5 border-2 bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:border-primary",
+                        !isSelected && "opacity-0 group-hover:opacity-100 transition-opacity"
+                      )}
+                    />
+                  </div>
+
+                  {/* Top-right: Status */}
+                  <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                    <Badge 
+                      variant={prod.is_active ? 'default' : 'secondary'} 
+                      className={cn(
+                        "text-[11px] px-2 py-0.5 font-medium shadow-sm",
+                        prod.is_active 
+                          ? "bg-emerald-500/90 text-white hover:bg-emerald-500" 
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {prod.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
-                  {isSelected && (
-                    <div className="absolute top-2 left-2">
-                      <CheckSquare className="h-5 w-5 text-primary bg-background rounded" />
-                    </div>
-                  )}
+
+                  {/* Bottom-left: Price */}
                   {price > 0 && (
-                    <div className="absolute bottom-2 left-2">
-                      <span className="bg-background/90 backdrop-blur-sm text-foreground text-xs font-bold px-2 py-1 rounded-full">
+                    <div className="absolute bottom-3 left-3">
+                      <span className="bg-background/90 backdrop-blur-sm text-foreground text-sm font-bold px-3 py-1 rounded-full shadow-sm">
                         ৳{price.toLocaleString()}
                       </span>
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4">
-                  <p className="font-medium text-sm mb-0.5 truncate">{prod.name_en}</p>
-                  <p className="text-xs text-muted-foreground mb-1 truncate">
-                    {(prod as any).categories?.name_en ?? 'Uncategorized'}
-                  </p>
-                  {(prod as any).product_code && (
-                    <p className="text-[10px] font-mono text-muted-foreground/60 mb-3 truncate">{(prod as any).product_code}</p>
+
+                {/* Content Area */}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-sm text-foreground truncate">{prod.name_en}</h3>
+                      <p className="text-xs text-primary/80 font-medium mt-0.5">{categoryName}</p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => openEdit(prod)}>
+                          <Pencil className="h-4 w-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleStatusMutation.mutate({ id: prod.id, is_active: !prod.is_active })}>
+                          {prod.is_active ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                          {prod.is_active ? 'Deactivate' : 'Activate'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => { setDeleteId(prod.id); setDeleteName(prod.name_en); }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {productCode && (
+                    <p className="text-[11px] font-mono text-muted-foreground/70 mb-3 truncate">
+                      {productCode}
+                    </p>
                   )}
-                  <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(prod)}>
-                      <Pencil className="h-3 w-3 mr-1" /> Edit
+
+                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 h-8 text-xs gap-1.5"
+                      onClick={() => openEdit(prod)}
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
                     </Button>
-                    <Button variant="outline" size="sm"
-                      onClick={() => { setDeleteId(prod.id); setDeleteName(prod.name_en); }}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
+                    <div className="flex items-center gap-1.5 px-2">
+                      <Switch 
+                        checked={prod.is_active}
+                        onCheckedChange={v => toggleStatusMutation.mutate({ id: prod.id, is_active: v })}
+                        className="scale-90"
+                      />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => { setDeleteId(prod.id); setDeleteName(prod.name_en); }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -624,14 +831,41 @@ const AdminProducts = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center justify-between bg-background border border-border rounded-xl px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={page === pageNum ? "default" : "outline"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => setPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+            <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -641,7 +875,7 @@ const AdminProducts = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Product?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{deleteName}</strong>. This action cannot be undone.
+              This will permanently delete <strong>{deleteName}</strong> and all its images and variants. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -658,7 +892,7 @@ const AdminProducts = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selected.size} Products?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete {selected.size} products. This action cannot be undone.
+              This will permanently delete {selected.size} products along with their images and variants. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
