@@ -50,6 +50,7 @@ const AdminQuoteRequests = lazy(() => import("./pages/admin/AdminQuoteRequests")
 const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
 const AdminContactInfo = lazy(() => import("./pages/admin/AdminContactInfo"));
 const AdminMenuManager = lazy(() => import("./pages/admin/AdminMenuManager"));
+const AdminProductEditor = lazy(() => import("./pages/admin/AdminProductEditor"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,6 +119,8 @@ const App = () => (
               }>
                 <Route index element={<Suspense fallback={<AdminFallback />}><AdminDashboard /></Suspense>} />
                 <Route path="products" element={<Suspense fallback={<AdminFallback />}><AdminProducts /></Suspense>} />
+                <Route path="products/new" element={<Suspense fallback={<AdminFallback />}><AdminProductEditor /></Suspense>} />
+                <Route path="products/edit/:id" element={<Suspense fallback={<AdminFallback />}><AdminProductEditor /></Suspense>} />
                 <Route path="categories" element={<Suspense fallback={<AdminFallback />}><AdminCategories /></Suspense>} />
                 <Route path="gallery" element={<Suspense fallback={<AdminFallback />}><AdminGallery /></Suspense>} />
                 <Route path="clients" element={<Suspense fallback={<AdminFallback />}><AdminClients /></Suspense>} />
