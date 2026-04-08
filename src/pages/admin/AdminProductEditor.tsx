@@ -80,6 +80,13 @@ const AdminProductEditor = () => {
     },
   });
 
+  // Auto-generate product code for new products
+  const generateProductCode = useCallback(() => {
+    const catPrefix = categories.find(c => c.id === form.category_id)?.name_en
+      ?.substring(0, 3).toUpperCase() || 'PRD';
+    return `${catPrefix}-${Date.now().toString(36).toUpperCase().slice(-5)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+  }, [categories, form.category_id]);
+
   // Populate form when product loads
   useEffect(() => {
     if (product) {
@@ -98,6 +105,13 @@ const AdminProductEditor = () => {
       });
     }
   }, [product]);
+
+  // Auto-generate code for new products on first load
+  useEffect(() => {
+    if (!isEdit && !form.product_code) {
+      setForm(f => ({ ...f, product_code: generateProductCode() }));
+    }
+  }, [isEdit]);
 
   const resizeImage = (file: File, maxSize = 1000): Promise<Blob> => {
     return new Promise((resolve, reject) => {
