@@ -62,6 +62,15 @@ const OptimizedImage = ({
   const [loaded, setLoaded] = useState(false);
   const [inView, setInView] = useState(priority);
   const imgRef = useRef<HTMLDivElement>(null);
+  const imgElRef = useRef<HTMLImageElement>(null);
+
+  // Handle cached images where onLoad may not fire
+  useEffect(() => {
+    const img = imgElRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  });
 
   // Intersection Observer for true lazy loading with early trigger
   useEffect(() => {
