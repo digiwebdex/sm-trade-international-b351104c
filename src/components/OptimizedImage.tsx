@@ -120,12 +120,14 @@ const OptimizedImage = ({
             <source srcSet={srcSet} sizes={sizes} />
           )}
           <img
+            ref={imgElRef}
             src={src}
             alt={alt}
             loading={priority ? 'eager' : 'lazy'}
             decoding={priority ? 'sync' : 'async'}
             fetchPriority={priority ? 'high' : undefined}
             onLoad={() => setLoaded(true)}
+            onError={() => setLoaded(true)}
             className={cn(
               'transition-[transform,filter] duration-500 will-change-[transform,filter]',
               blurPlaceholder && !loaded && 'scale-105 blur-sm',
