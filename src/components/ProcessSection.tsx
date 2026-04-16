@@ -14,9 +14,10 @@ const ProcessSection = () => {
     desc: get('process', `step${n}_desc`, t(`process.${n}.desc`)),
   }));
 
+  const sectionLabel = lang === 'zh' ? '运作方式' : lang === 'bn' ? 'কিভাবে কাজ করে' : 'How It Works';
+
   return (
     <section className="py-24 bg-secondary relative overflow-hidden">
-      {/* Subtle dot pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: 'radial-gradient(hsl(var(--primary)) 1px, transparent 1px)',
         backgroundSize: '24px 24px',
@@ -25,7 +26,7 @@ const ProcessSection = () => {
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16">
           <span className="inline-block text-accent text-xs font-semibold tracking-widest uppercase mb-3" style={{ fontFamily: 'DM Sans, sans-serif' }}>
-            {lang === 'en' ? 'How It Works' : 'কিভাবে কাজ করে'}
+            {sectionLabel}
           </span>
           <h2 className="text-3xl md:text-5xl font-bold mb-5">{t('process.title')}</h2>
           <div className="flex items-center justify-center gap-3">
@@ -35,7 +36,6 @@ const ProcessSection = () => {
           </div>
         </div>
 
-        {/* Desktop: Alternating timeline */}
         <div className="hidden md:block relative max-w-4xl mx-auto">
           <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-primary -translate-x-1/2" />
           <div className="space-y-12">
@@ -64,7 +64,6 @@ const ProcessSection = () => {
           </div>
         </div>
 
-        {/* Mobile: Vertical timeline */}
         <div className="md:hidden relative pl-12">
           <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-primary" />
           <div className="space-y-8">

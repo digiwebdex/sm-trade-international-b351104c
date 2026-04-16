@@ -9,7 +9,6 @@ const {
 
 const router = express.Router();
 
-// ── Tables eligible for auto-translation (column-based) ─────
 const TRANSLATABLE_TABLES = {
   categories:        { fields: ['name', 'description'] },
   products:          { fields: ['name', 'description', 'short_description'] },
@@ -19,9 +18,76 @@ const TRANSLATABLE_TABLES = {
   seo_meta:          { fields: ['meta_title', 'meta_description'] },
 };
 
-// ── POST /api/translate — generic batch translate ──────────
-//   body: { texts: string[], source?: 'en', targets?: ['bn','zh'] }
-//   resp: { bn: string[], zh: string[] }
+async function translateHeroSlides(rows, { onlyIfEmpty, targets }) {
+  let updated = 0;
+  let skipped = 0;
+  const errors = [];
+
+  for (const row of rows) {
+    const nextTranslations = row.translations && typeof row.translations === 'object'
+      ? JSON.parse(JSON.stringify(row.translations))
+      : {};
+
+    let changed = false;
+
+    for (const target of targets) {
+      const sourceFields = [
+        { key: 'title', value: row.title || '' },
+        { key: 'subtitle', value: row.subtitle || '' },
+        { key: 'cta_text', value: row.cta_text || '' },
+      ].filter((field) => field.value && String(field.value).trim());
+
+      if (sourceFields.length === 0) continue;
+
+      const current = nextTranslations[target] && typeof nextTranslations[target] === 'object'
+        ? nextTranslations[target]
+        : {};
+
+      const pending = sourceFields.filter((field) => {
+        const existing = current[field.key];
+        return !(onlyIfEmpty && existing && String(existing).trim());
+      });
+
+      if (pending.length === 0) continue;
+
+      const translated = await translateBatch(
+        pending.map((field) => field.value),
+        'en',
+        target,
+      );
+
+      pending.forEach((field, index) => {
+        const value = translated[index];
+        if (value && value !== current[field.key]) {
+          current[field.key] = value;
+          changed = true;
+        }
+      });
+
+      if (Object.keys(current).length > 0) {
+        nextTranslations[target] = current;
+      }
+    }
+
+    if (!changed) {
+      skipped++;
+      continue;
+    }
+
+    try {
+      await pool.query(
+        'UPDATE hero_slides SET translations = $1, updated_at = now() WHERE id = $2',
+        [JSON.stringify(nextTranslations), row.id],
+      );
+      updated++;
+    } catch (e) {
+      errors.push({ id: row.id, error: e.message });
+    }
+  }
+
+  return { updated, skipped, errors };
+}
+
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { texts, source = 'en', targets = ['bn', 'zh'] } = req.body || {};
@@ -39,25 +105,27 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/translate/bulk/:table ─────────────────────────
-// Loops through all rows of a table and fills missing _bn / _zh fields.
-// Body: { onlyIfEmpty?: true, targets?: ['bn','zh'] }
 router.post('/bulk/:table', authMiddleware, async (req, res) => {
   const { table } = req.params;
-  const cfg = TRANSLATABLE_TABLES[table];
-  if (!cfg) return res.status(400).json({ error: `Table ${table} is not translatable` });
-
   const onlyIfEmpty = req.body?.onlyIfEmpty !== false;
   const targets = Array.isArray(req.body?.targets) ? req.body.targets : ['bn', 'zh'];
 
   try {
+    if (table === 'hero_slides') {
+      const { rows } = await pool.query('SELECT * FROM hero_slides ORDER BY sort_order, created_at');
+      const result = await translateHeroSlides(rows, { onlyIfEmpty, targets });
+      return res.json({ table, total: rows.length, ...result });
+    }
+
+    const cfg = TRANSLATABLE_TABLES[table];
+    if (!cfg) return res.status(400).json({ error: `Table ${table} is not translatable` });
+
     const { rows } = await pool.query(`SELECT * FROM ${table}`);
     let updated = 0;
     let skipped = 0;
     const errors = [];
 
     for (const row of rows) {
-      // Build a payload of just the translatable _en fields
       const payload = {};
       for (const f of cfg.fields) {
         const enKey = `${f}_en`;
@@ -67,7 +135,6 @@ router.post('/bulk/:table', authMiddleware, async (req, res) => {
 
       const translated = await autoFillTranslations(payload, { onlyIfEmpty, targets });
 
-      // Diff: only UPDATE columns that actually changed
       const setParts = [];
       const values = [];
       let i = 1;
@@ -80,7 +147,10 @@ router.post('/bulk/:table', authMiddleware, async (req, res) => {
           }
         }
       }
-      if (setParts.length === 0) { skipped++; continue; }
+      if (setParts.length === 0) {
+        skipped++;
+        continue;
+      }
       values.push(row.id);
       try {
         await pool.query(
@@ -100,8 +170,6 @@ router.post('/bulk/:table', authMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/translate/bulk-site-settings ──────────────────
-// Loops site_settings JSONB rows, fills missing bn/zh in nested values.
 router.post('/bulk-site-settings', authMiddleware, async (req, res) => {
   const onlyIfEmpty = req.body?.onlyIfEmpty !== false;
   const targets = Array.isArray(req.body?.targets) ? req.body.targets : ['bn', 'zh'];
@@ -127,7 +195,6 @@ router.post('/bulk-site-settings', authMiddleware, async (req, res) => {
   }
 });
 
-// ── GET /api/translate/health ──────────────────────────────
 router.get('/health', async (_req, res) => {
   try {
     const url = (process.env.LIBRETRANSLATE_URL || 'http://libretranslate:5000') + '/languages';

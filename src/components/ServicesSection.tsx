@@ -11,12 +11,12 @@ const defaultIcons = ['Gift', 'Monitor', 'Briefcase', 'GlassWater'];
 type CategoryFilter = 'all' | 'corporate' | 'office' | 'leather' | 'crystal';
 const filters: CategoryFilter[] = ['corporate', 'office', 'leather', 'crystal'];
 
-const filterChips: { key: CategoryFilter; labelEn: string; labelBn: string }[] = [
-  { key: 'all', labelEn: 'All Categories', labelBn: 'সব ক্যাটাগরি' },
-  { key: 'corporate', labelEn: 'Corporate Gifts', labelBn: 'কর্পোরেট গিফট' },
-  { key: 'office', labelEn: 'Office Accessories', labelBn: 'অফিস আনুষাঙ্গিক' },
-  { key: 'leather', labelEn: 'Leather Products', labelBn: 'লেদার পণ্য' },
-  { key: 'crystal', labelEn: 'Glass & Crystal', labelBn: 'গ্লাস ও ক্রিস্টাল' },
+const filterChips: { key: CategoryFilter; labelEn: string; labelBn: string; labelZh: string }[] = [
+  { key: 'all', labelEn: 'All Categories', labelBn: 'সব ক্যাটাগরি', labelZh: '全部类别' },
+  { key: 'corporate', labelEn: 'Corporate Gifts', labelBn: 'কর্পোরেট গিফট', labelZh: '企业礼品' },
+  { key: 'office', labelEn: 'Office Accessories', labelBn: 'অফিস আনুষাঙ্গিক', labelZh: '办公配件' },
+  { key: 'leather', labelEn: 'Leather Products', labelBn: 'লেদার পণ্য', labelZh: '皮革产品' },
+  { key: 'crystal', labelEn: 'Glass & Crystal', labelBn: 'গ্লাস ও ক্রিস্টাল', labelZh: '玻璃与水晶' },
 ];
 
 const ServicesSection = () => {
@@ -36,13 +36,14 @@ const ServicesSection = () => {
   });
 
   const filtered = active === 'all' ? categories : categories.filter(c => c.filter === active);
+  const sectionLabel = lang === 'zh' ? '我们的服务' : lang === 'bn' ? 'আমরা যা অফার করি' : 'What We Offer';
 
   return (
     <section id="services" className="py-24">
       <div className="container mx-auto px-4">
         <div className="text-center mb-14">
           <span className="inline-block text-accent text-sm font-semibold tracking-widest uppercase mb-3" style={{ fontFamily: 'DM Sans, sans-serif' }}>
-            {lang === 'en' ? 'What We Offer' : 'আমরা যা অফার করি'}
+            {sectionLabel}
           </span>
           <h2 className="text-3xl md:text-5xl font-bold mb-5">{t('categories.title')}</h2>
           <div className="flex items-center justify-center gap-3 mb-6">
@@ -53,20 +54,23 @@ const ServicesSection = () => {
         </div>
 
         <div className="flex justify-center gap-2 mb-12 flex-wrap">
-          {filterChips.map(chip => (
-            <button
-              key={chip.key}
-              onClick={() => setActive(chip.key)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                active === chip.key
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'bg-secondary text-foreground hover:bg-primary/10 hover:text-primary'
-              }`}
-              style={{ fontFamily: 'DM Sans, sans-serif' }}
-            >
-              {lang === 'en' ? chip.labelEn : chip.labelBn}
-            </button>
-          ))}
+          {filterChips.map(chip => {
+            const chipLabel = lang === 'zh' ? chip.labelZh : lang === 'bn' ? chip.labelBn : chip.labelEn;
+            return (
+              <button
+                key={chip.key}
+                onClick={() => setActive(chip.key)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                  active === chip.key
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-secondary text-foreground hover:bg-primary/10 hover:text-primary'
+                }`}
+                style={{ fontFamily: 'DM Sans, sans-serif' }}
+              >
+                {chipLabel}
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
