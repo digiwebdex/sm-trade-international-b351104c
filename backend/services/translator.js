@@ -6,7 +6,8 @@ const LIBRE_URL = process.env.LIBRETRANSLATE_URL || 'http://libretranslate:5000'
 const LIBRE_KEY = process.env.LIBRETRANSLATE_API_KEY || '';
 
 // LibreTranslate language codes
-const LANG_CODE = { en: 'en', bn: 'bn', zh: 'zh' };
+// NOTE: LibreTranslate uses 'zh-Hans' (Simplified Chinese), not 'zh'
+const LANG_CODE = { en: 'en', bn: 'bn', zh: 'zh-Hans', 'zh-Hans': 'zh-Hans' };
 
 /**
  * Translate a single string from source to target language.
