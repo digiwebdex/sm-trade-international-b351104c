@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { pickLocalized } from '@/hooks/useLocalized';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/apiClient';
 import { X, Search } from 'lucide-react';
@@ -98,7 +99,7 @@ const ProductsSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('id, name_en, name_bn')
+        .select('*')
         .eq('is_active', true)
         .order('sort_order');
       if (error) throw error;
@@ -117,14 +118,14 @@ const ProductsSection = () => {
           dbId: p.id,
           slug: (p as any).product_code ? encodeURIComponent((p as any).product_code) : p.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || p.id,
           src: p.image_url || '',
-          title: lang === 'en' ? p.name_en : (p.name_bn || p.name_en),
+          title: pickLocalized(p as any, 'name', lang),
           titleEn: p.name_en,
           titleBn: p.name_bn || '',
-          desc: lang === 'en' ? (p.description_en || '') : (p.description_bn || p.description_en || ''),
+          desc: pickLocalized(p as any, 'description', lang) || pickLocalized(p as any, 'short_description', lang),
           descEn: p.description_en || '',
           descBn: p.description_bn || '',
           category: p.category_id || 'all',
-          categoryLabel: cat ? (lang === 'en' ? cat.name_en : (cat.name_bn || cat.name_en)) : '',
+          categoryLabel: cat ? pickLocalized(cat, 'name', lang) : '',
           isActive: p.is_active,
         };
       });
@@ -150,7 +151,7 @@ const ProductsSection = () => {
         { id: 'all', label: t('products.all') },
         ...dbCategories.map(c => ({
           id: c.id,
-          label: lang === 'en' ? c.name_en : (c.name_bn || c.name_en),
+          label: pickLocalized(c as any, 'name', lang),
         })),
       ];
     }

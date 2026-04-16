@@ -43,11 +43,34 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_API_URL: ${AI_API_URL:-}
       AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      # ── Translation service (LibreTranslate self-hosted) ──
+      LIBRETRANSLATE_URL: ${LIBRETRANSLATE_URL:-http://libretranslate:5000}
+      LIBRETRANSLATE_API_KEY: ${LIBRETRANSLATE_API_KEY:-}
     volumes:
       - uploads:/app/uploads
     ports:
       - "127.0.0.1:4000:4000"
 
+  # ── Self-hosted translation service ─────────────────────────
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    restart: unless-stopped
+    environment:
+      LT_LOAD_ONLY: en,bn,zh
+      LT_DISABLE_WEB_UI: "true"
+      LT_THREADS: 2
+    volumes:
+      - libretranslate_models:/home/libretranslate/.local
+    ports:
+      - "127.0.0.1:5500:5000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/languages"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
 volumes:
   pgdata:
   uploads:
+  libretranslate_models:
