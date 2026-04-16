@@ -7,7 +7,7 @@
  *   GET  /api/translate/health
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,7 @@ const BULK_TABLES = [
   { key: 'gallery', label: 'Gallery', icon: '🖼️' },
   { key: 'about_page', label: 'About Page', icon: '📄' },
   { key: 'seo_meta', label: 'SEO Metadata', icon: '🔍' },
+  { key: 'hero_slides', label: 'Hero Slides', icon: '🎞️' },
 ];
 
 type JobResult = {
@@ -38,7 +39,6 @@ const AdminTranslations = () => {
   const [serviceStatus, setServiceStatus] = useState<'checking' | 'ok' | 'down'>('checking');
   const [serviceLangs, setServiceLangs] = useState<string[]>([]);
 
-  // Health check on mount
   useEffect(() => {
     let mounted = true;
     fetch(`${API_BASE}/translate/health`)
@@ -109,7 +109,6 @@ const AdminTranslations = () => {
         </p>
       </div>
 
-      {/* Service status */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -144,11 +143,7 @@ const AdminTranslations = () => {
               )}
             </div>
 
-            <Button
-              onClick={runAll}
-              disabled={!!running || serviceStatus !== 'ok'}
-              className="gap-2"
-            >
+            <Button onClick={runAll} disabled={!!running || serviceStatus !== 'ok'} className="gap-2">
               <Sparkles className="h-4 w-4" />
               {running ? `Translating ${running}…` : 'Translate Everything'}
             </Button>
@@ -156,7 +151,6 @@ const AdminTranslations = () => {
         </CardContent>
       </Card>
 
-      {/* Per-table cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[...BULK_TABLES, { key: 'site_settings', label: 'Site Settings (JSON)', icon: '⚙️' }].map(t => {
           const r = results[t.key];
@@ -174,12 +168,8 @@ const AdminTranslations = () => {
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">Total: {r.total}</Badge>
                     <Badge className="bg-primary text-primary-foreground">Updated: {r.updated}</Badge>
-                    {typeof r.skipped === 'number' && (
-                      <Badge variant="outline">Skipped: {r.skipped}</Badge>
-                    )}
-                    {r.errors && r.errors.length > 0 && (
-                      <Badge variant="destructive">Errors: {r.errors.length}</Badge>
-                    )}
+                    {typeof r.skipped === 'number' && <Badge variant="outline">Skipped: {r.skipped}</Badge>}
+                    {r.errors && r.errors.length > 0 && <Badge variant="destructive">Errors: {r.errors.length}</Badge>}
                   </div>
                 )}
                 <Button
@@ -206,7 +196,7 @@ const AdminTranslations = () => {
           <p className="font-medium text-foreground">💡 How it works</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>From now on, you only need to fill the <strong>English</strong> field when adding/editing content.</li>
-            <li>The system auto-translates to Bengali (বাংলা) and Chinese (中文) on save.</li>
+            <li>The system auto-translates to Bengali (বাংলা) and Chinese (中文), including hero slides.</li>
             <li>If you manually fill a Bengali or Chinese field, your value is preserved (never overwritten).</li>
             <li>This page is only for back-filling translations on existing content.</li>
           </ul>
