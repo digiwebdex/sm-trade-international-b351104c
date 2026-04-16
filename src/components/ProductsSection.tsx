@@ -99,7 +99,7 @@ const ProductsSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('id, name_en, name_bn')
+        .select('*')
         .eq('is_active', true)
         .order('sort_order');
       if (error) throw error;
