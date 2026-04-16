@@ -18,7 +18,7 @@ const ProductCarousel = ({
   lang,
   onProductClick,
 }: {
-  products: Array<{ id: string; name_en: string; name_bn: string; image_url: string | null; product_code: string | null; category_id: string | null; unit_price: number }>;
+  products: Array<{ id: string; name_en: string; name_bn: string; name_zh?: string; image_url: string | null; product_code: string | null; category_id: string | null; unit_price: number }>;
   lang: string;
   onProductClick: (product: any) => void;
 }) => {
@@ -90,7 +90,7 @@ const ProductCarousel = ({
                   )}
                   <OptimizedImage
                     src={product.image_url || '/placeholder.svg'}
-                    alt={lang === 'en' ? product.name_en : product.name_bn}
+                    alt={lang === 'zh' ? (product.name_zh || product.name_bn || product.name_en) : lang === 'en' ? product.name_en : product.name_bn}
                     className="max-w-full max-h-full object-contain relative z-[1] drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                   />
                 </div>
@@ -104,7 +104,7 @@ const ProductCarousel = ({
                   <h3 className={`text-[11px] font-bold truncate tracking-wider uppercase transition-colors duration-500 ${
                     isActive ? 'text-[hsl(var(--sm-gold))]' : 'text-white/50'
                   }`}>
-                    {lang === 'en' ? product.name_en : (product.name_bn || product.name_en)}
+                    {lang === 'zh' ? (product.name_zh || product.name_bn || product.name_en) : lang === 'en' ? product.name_en : (product.name_bn || product.name_en)}
                   </h3>
                   {isActive && product.product_code && (
                     <p className="text-[9px] text-white/30 mt-0.5 tracking-widest">{product.product_code}</p>
@@ -175,9 +175,9 @@ const HeroSection = () => {
   const { data: featuredProducts } = useQuery({
     queryKey: ['hero-featured-products'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name_en, name_bn, image_url, product_code, category_id, unit_price')
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name_en, name_bn, name_zh, image_url, product_code, category_id, unit_price')
         .eq('is_active', true)
         .order('sort_order')
         .limit(12);

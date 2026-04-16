@@ -16,6 +16,7 @@ import OptimizedImage from '@/components/OptimizedImage';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isUUID, productSlug } from '@/lib/productSlug';
+import { pickLocalized } from '@/hooks/useLocalized';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +39,7 @@ const ProductDetail = () => {
       if (isUUID(id)) {
         const { data, error } = await supabase
           .from('products')
-          .select('*, categories(name_en, name_bn)')
+          .select('*, categories(name_en, name_bn, name_zh)')
           .eq('id', id)
           .maybeSingle();
         if (error) throw error;
@@ -46,13 +47,13 @@ const ProductDetail = () => {
       }
       const { data: byCode } = await supabase
         .from('products')
-        .select('*, categories(name_en, name_bn)')
+        .select('*, categories(name_en, name_bn, name_zh)')
         .eq('product_code', decodeURIComponent(id))
         .maybeSingle();
       if (byCode) return byCode;
       const { data: all } = await supabase
         .from('products')
-        .select('*, categories(name_en, name_bn)');
+        .select('*, categories(name_en, name_bn, name_zh)');
       const slug = decodeURIComponent(id);
       return all?.find(p => {
         const s = p.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -98,7 +99,7 @@ const ProductDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*, categories(name_en, name_bn)')
+        .select('*, categories(name_en, name_bn, name_zh)')
         .eq('category_id', product!.category_id!)
         .neq('id', productId!)
         .eq('is_active', true)
@@ -204,12 +205,10 @@ const ProductDetail = () => {
   }
 
   const cat = (product as any).categories;
-  const title = lang === 'en' ? product.name_en : (product.name_bn || product.name_en);
-  const desc = lang === 'en' ? (product.description_en ?? '') : (product.description_bn ?? product.description_en ?? '');
-  const shortDesc = lang === 'en'
-    ? ((product as any).short_description_en ?? '')
-    : ((product as any).short_description_bn ?? (product as any).short_description_en ?? '');
-  const categoryLabel = cat ? (lang === 'en' ? cat.name_en : (cat.name_bn || cat.name_en)) : '';
+  const title = pickLocalized(product as any, 'name', lang);
+  const desc = pickLocalized(product as any, 'description', lang);
+  const shortDesc = pickLocalized(product as any, 'short_description', lang);
+  const categoryLabel = cat ? pickLocalized(cat, 'name', lang) : '';
 
   return (
     <div className="min-h-screen bg-background pt-2 pb-20">
