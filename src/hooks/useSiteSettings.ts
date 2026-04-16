@@ -2,8 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/apiClient';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-type BilingualValue = { en: string; bn: string };
-type SettingsMap = Record<string, BilingualValue | string>;
+type Lang = 'en' | 'bn' | 'zh';
+type TrilingualValue = { en?: string; bn?: string; zh?: string };
+type SettingsMap = Record<string, TrilingualValue | string>;
 
 export const useSiteSettings = () => {
   const { lang } = useLanguage();
@@ -23,10 +24,8 @@ export const useSiteSettings = () => {
   });
 
   /**
-   * Get a setting value. Handles both bilingual {en, bn} and flat string/value formats.
-   * For bilingual: section=hero, field=title → settings.hero.title[lang]
-   * For flat: section=contact, field=phone → settings.contact.phone (string)
-   * Also handles nested key maps like {title_en, title_bn} format
+   * Resolve a setting value with full trilingual fallback chain:
+   *   requested-lang → en → bn → fallback
    */
   const get = (section: string, field: string, fallback = ''): string => {
     const sectionData = allSettings?.[section];
@@ -34,26 +33,28 @@ export const useSiteSettings = () => {
 
     const val = sectionData[field];
     if (!val) {
-      // Try lang-suffixed keys: field_en / field_bn
-      const langKey = `${field}_${lang}`;
-      const langVal = sectionData[langKey];
-      if (langVal && typeof langVal === 'string') return langVal;
-      // Try English fallback
-      const enVal = sectionData[`${field}_en`];
-      if (enVal && typeof enVal === 'string') return enVal;
+      // Try lang-suffixed keys: field_zh / field_bn / field_en
+      const order: Lang[] = [lang, 'en', 'bn', 'zh'].filter(
+        (l, i, arr) => arr.indexOf(l) === i,
+      ) as Lang[];
+      for (const l of order) {
+        const v = sectionData[`${field}_${l}`];
+        if (v && typeof v === 'string') return v;
+      }
       return fallback;
     }
 
-    // If it's a string directly (flat format like contact.phone = "+88...")
     if (typeof val === 'string') return val;
 
-    // If it's a bilingual object {en, bn}
     if (typeof val === 'object' && val !== null) {
-      const biVal = val as BilingualValue;
-      const result = biVal[lang];
-      if (result) return result;
-      // Fallback to English
-      if (biVal.en) return biVal.en;
+      const tri = val as TrilingualValue;
+      const order: Lang[] = [lang, 'en', 'bn', 'zh'].filter(
+        (l, i, arr) => arr.indexOf(l) === i,
+      ) as Lang[];
+      for (const l of order) {
+        const v = tri[l];
+        if (v && String(v).trim()) return v;
+      }
     }
 
     return fallback;
