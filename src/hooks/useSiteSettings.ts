@@ -25,37 +25,32 @@ export const useSiteSettings = () => {
 
   /**
    * Resolve a setting value with full trilingual fallback chain:
-   *   requested-lang → en → bn → fallback
+   *   requested-lang → en → bn → zh → plain string → fallback
    */
   const get = (section: string, field: string, fallback = ''): string => {
     const sectionData = allSettings?.[section];
     if (!sectionData) return fallback;
 
-    const val = sectionData[field];
-    if (!val) {
-      // Try lang-suffixed keys: field_zh / field_bn / field_en
-      const order: Lang[] = [lang, 'en', 'bn', 'zh'].filter(
-        (l, i, arr) => arr.indexOf(l) === i,
-      ) as Lang[];
-      for (const l of order) {
-        const v = sectionData[`${field}_${l}`];
-        if (v && typeof v === 'string') return v;
-      }
-      return fallback;
-    }
+    const order: Lang[] = [lang, 'en', 'bn', 'zh'].filter(
+      (l, i, arr) => arr.indexOf(l) === i,
+    ) as Lang[];
 
-    if (typeof val === 'string') return val;
+    const val = sectionData[field];
 
     if (typeof val === 'object' && val !== null) {
       const tri = val as TrilingualValue;
-      const order: Lang[] = [lang, 'en', 'bn', 'zh'].filter(
-        (l, i, arr) => arr.indexOf(l) === i,
-      ) as Lang[];
       for (const l of order) {
         const v = tri[l];
         if (v && String(v).trim()) return v;
       }
     }
+
+    for (const l of order) {
+      const v = sectionData[`${field}_${l}`];
+      if (v && typeof v === 'string' && String(v).trim()) return v;
+    }
+
+    if (typeof val === 'string' && String(val).trim()) return val;
 
     return fallback;
   };
